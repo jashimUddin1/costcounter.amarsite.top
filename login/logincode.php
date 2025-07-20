@@ -31,31 +31,6 @@ if (isset($_POST['login_now_btn'])) {
                         'role' => $user_data['role']
                     ];
 
-                    // login info collect
-                    $user_id = $user_data['id'];
-                    $ip = $_SERVER['REMOTE_ADDR'];
-                    $device = $_SERVER['HTTP_USER_AGENT'];
-
-                    // privious login time
-                    $prev_login = NULL;
-                    $get_last = "SELECT login_time FROM login_logs WHERE user_id='$user_id' ORDER BY login_time DESC LIMIT 1";
-                    $last_run = mysqli_query($con, $get_last);
-                    if(mysqli_num_rows($last_run) > 0){
-                        $last = mysqli_fetch_assoc($last_run);
-                        $prev_login = $last['login_time'];
-                    }
-
-                    // try to find out location
-                    $location = "Unknown";
-                    $details = json_decode(file_get_contents("https://tools.keycdn.com/geo?host=$ip"));
-                    if(isset($details->city) && isset($details->country)){
-                        $location = $details->city . ", " . $details->country;
-                    }
-
-                     // login info insert
-                    $log_query = "INSERT INTO login_logs (user_id, ip_address, device_info, location, previous_login)
-                    VALUES ('$user_id', '$ip', '$device', '$location', " . ($prev_login ? "'$prev_login'" : "NULL") . ")";
-                    mysqli_query($con, $log_query);
 
                     $_SESSION['success'] = "Login successful!";
                     header("Location: ../index.php");

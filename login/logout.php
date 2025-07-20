@@ -12,13 +12,6 @@ if (isset($_SESSION['auth_user']['id'])) {
     $user_id = $_SESSION['auth_user']['id'];
     $logout_time = date("Y-m-d H:i:s");
 
-    // ✅ ১. logout_time আপডেট করো (শেষ লগিন লগের)
-    $query = "UPDATE login_logs SET logout_time = ? WHERE user_id = ? ORDER BY id DESC LIMIT 1";
-    $stmt = mysqli_prepare($con, $query);
-    if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "si", $logout_time, $user_id);
-        mysqli_stmt_execute($stmt);
-    }
 
     // ✅ ২. remember_token ফাঁকা করো
     $query2 = "UPDATE users SET remember_token = NULL WHERE id = ?";

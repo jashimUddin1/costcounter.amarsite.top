@@ -71,7 +71,9 @@ while ($row = mysqli_fetch_assoc($result)) {
             <button type="submit" class="btn btn-primary">➕ যোগ করুন</button>
         </div>
     </form>
+<hr>
 
+<hr>
     <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
         <h4 class="mb-0">🗓️ প্রতিদিনের লেনদেন</h4>
         <div class="d-flex ">
