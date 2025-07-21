@@ -1,227 +1,164 @@
+<?php
+session_start();
+include("db/dbcon.php");
 
-<?php 
-  session_start();
-  include("db/dbcon.php");
+if (!isset($_SESSION['authenticated'])) {
+    header("location: login/index.php");
+    exit();
+}
 
-  if (!isset($_SESSION['authenticated'])) {
-      header("location: login/index.php");
-      exit();
-  }
+$user_id = $_SESSION['auth_user']['id'];
+$current_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+$current_month = isset($_GET['month']) ? $_GET['month'] : date('F');
 
-  $user_id = $_SESSION["auth_user"]["id"];
+// Get available years from cost_data
+$yearQuery = "SELECT DISTINCT YEAR(date) as year FROM cost_data WHERE user_id = ? ORDER BY year DESC";
+$stmtYear = $con->prepare($yearQuery);
+$stmtYear->bind_param("i", $user_id);
+$stmtYear->execute();
+$yearResult = $stmtYear->get_result();
+$years = [];
+while ($row = $yearResult->fetch_assoc()) {
+    $years[] = $row['year'];
+}
+$stmtYear->close();
 
-  $monthOrder = "'January','February','March','April','May','June','July','August','September','October','November','December'";
-  $monthDESC = "'December','November','October','September','August','July','June','May','April','March','February','January'";
+// Get months for selected year from cost_data
+$monthQuery = "SELECT DISTINCT MONTH(date) as month_number, MONTHNAME(date) as month_name FROM cost_data WHERE user_id = ? AND YEAR(date) = ? ORDER BY month_number ASC";
+$stmtMonth = $con->prepare($monthQuery);
+$stmtMonth->bind_param("ii", $user_id, $current_year);
+$stmtMonth->execute();
+$monthResult = $stmtMonth->get_result();
+$months = [];
+while ($row = $monthResult->fetch_assoc()) {
+    $months[] = $row['month_name'];
+}
+$stmtMonth->close();
 
-  // Month-Year Data Grouped
-  $yearMonthData = [];
-  $stmt = $con->prepare("SELECT year, month FROM month WHERE user_id = ? ORDER BY year ASC, FIELD(month, $monthOrder)");
-  $stmt->bind_param("i", $user_id);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  while ($row = $result->fetch_assoc()) {
-      $year = htmlspecialchars($row['year']);
-      $month = htmlspecialchars($row['month']);
-      $yearMonthData[$year][] = $month;
-  }
-  $stmt->close();
+// Get filtered transactions from cost_data
+$transQuery = "SELECT * FROM cost_data WHERE user_id = ? AND YEAR(date) = ? AND MONTHNAME(date) = ? ORDER BY date DESC";
+$stmtTrans = $con->prepare($transQuery);
+$stmtTrans->bind_param("iis", $user_id, $current_year, $current_month);
+$stmtTrans->execute();
+$transResult = $stmtTrans->get_result();
 
-  // Latest year & month with day (combined)
-  $latestYear = $latestMonth = $month_day = null;
-  $stmtLatest = $con->prepare("SELECT year, month, day FROM month WHERE user_id = ? ORDER BY year DESC, FIELD(month, $monthDESC) LIMIT 1");
-  $stmtLatest->bind_param("i", $user_id);
-  $stmtLatest->execute();
-  $resultLatest = $stmtLatest->get_result();
-  if ($row = $resultLatest->fetch_assoc()) {
-      $latestYear = $row['year'];
-      $latestMonth = $row['month'];
-      $month_day = htmlspecialchars($row['day']);
-  }
-  $stmtLatest->close();
+// Get monthly remaining balance from cost_month
+$balanceQuery = "SELECT amount FROM cost_data WHERE user_id = ? AND year = ? AND month = ?";
+$stmtBalance = $con->prepare($balanceQuery);
+$stmtBalance->bind_param("iis", $user_id, $current_year, $current_month);
+$stmtBalance->execute();
+$balanceResult = $stmtBalance->get_result();
+$monthly_balance = $balanceResult->fetch_assoc()['amount'] ?? 0;
+$stmtBalance->close();
 
-  // GET override fallback
-  $year = isset($_GET['year']) ? $_GET['year'] : $latestYear;
-  $month = isset($_GET['month']) ? $_GET['month'] : $latestMonth;
+$total_monthly_cost = 0;
+$grouped_data = [];
+while ($row = $transResult->fetch_assoc()) {
+    $date = date('d-m-Y', strtotime($row['date']));
+    $grouped_data[$date][] = $row;
+    $total_monthly_cost += $row['amount'];
+}
 
-  // Fetch day count for selected month/year
-  $stmtDay = $con->prepare("SELECT day FROM month WHERE user_id = ? AND month = ? AND year = ? LIMIT 1");
-  $stmtDay->bind_param("iss", $user_id, $month, $year);
-  $stmtDay->execute();
-  $resultDay = $stmtDay->get_result();
-  if ($row = $resultDay->fetch_assoc()) {
-      $month_day = htmlspecialchars($row['day']);
-  }
-  $stmtDay->close();
+// Insert transaction if POST request received
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $date = $_POST['date'];
+    $description = $_POST['description'];
+    $amount = floatval($_POST['amount']);
+    $category = $_POST['category'];
 
-  // User info
-  $stmtUser = $con->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
-  $stmtUser->bind_param("i", $user_id);
-  $stmtUser->execute();
-  $resultUser = $stmtUser->get_result();
-  $user_data = $resultUser->fetch_assoc();
-  $stmtUser->close();
+    $insertQuery = "INSERT INTO cost_data (user_id, date, description, amount, category) VALUES (?, ?, ?, ?, ?)";
+    $stmtInsert = $con->prepare($insertQuery);
+    $stmtInsert->bind_param("issds", $user_id, $date, $description, $amount, $category);
+    $stmtInsert->execute();
+    $stmtInsert->close();
 
-  $besic_salary = htmlspecialchars($user_data['basic_salary']);
-  $rider_type = htmlspecialchars($user_data['riderType']);
-  $oil_cost = htmlspecialchars($user_data['oil_cost']);
+    header("Location: index.php?year={$current_year}&month={$current_month}");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
-    <link href="assets/css/styles.css" rel="stylesheet" type="text/css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ডেইলি খরচ এন্ট্রি</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .date-card { background: #f8f9fa; border-left: 5px solid orange; padding: 10px; margin-bottom: 10px; }
+    .cost-entry { padding-left: 20px; }
+  </style>
 </head>
 <body>
 
-<div class="headerWrapper">
-  <div class="header">
-    <div class="headerLogo">
-      <a href="#">Developer Jasim</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <span class="navbar-brand">Developer Jasim</span>
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><?= $current_year ?></a>
+        <ul class="dropdown-menu">
+          <?php foreach ($years as $year): ?>
+            <li><a class="dropdown-item" href="?year=<?= $year ?>"><?= $year ?></a></li>
+          <?php endforeach; ?>
+        </ul>
+      </li>
+      <li class="nav-item"><a class="nav-link" href="#">Profile</a></li>
+      <li class="nav-item"><a class="nav-link btn btn-danger text-white" href="logout.php">Logout</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container mt-3">
+  <h5><span class="badge bg-success">Selected Month: <?= $current_month ?>-<?= $current_year ?></span></h5>
+
+  <div class="dropdown my-3">
+    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">মাস নির্বাচন করুন</button>
+    <ul class="dropdown-menu">
+      <?php foreach ($months as $month): ?>
+        <li><a class="dropdown-item" href="?year=<?= $current_year ?>&month=<?= $month ?>"><?= $month ?></a></li>
+      <?php endforeach; ?>
+    </ul>
+  </div>
+
+  <!-- Entry Form -->
+  <form class="row g-3 mb-4" method="POST" action="add_entry.php">
+    <div class="col-md-3">
+      <input type="date" name="date" class="form-control" required>
     </div>
-    <div class="menuIcon">
-      <span class="icon">&#9776;</span>
+    <div class="col-md-4">
+      <input type="text" name="description" class="form-control" placeholder="খরচের বিবরণ" required>
     </div>
-    <div class="headerMenu">
-      <ul>
-        <li class="nav-item dropdown">
-          <div id="yearNavigator" style="display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative;">
-            <button id="prevYearBtn">&lt;</button>
-            <span id="currentYear" class="dropbtn" style="color: white;">Year</span>
-            <button id="nextYearBtn">&gt;</button>
-            <ul id="monthDropdown" class="dropdown-menu dropdown-content" style="position: absolute; top: 30px; display: none; background: white; border: 1px solid #ccc; padding: 5px; z-index: 1000;"></ul>
-          </div>
-        </li>
-        <li><a id="adminBtn" href="admin">Admin Panel</a></li>
-      </ul>
+    <div class="col-md-2">
+      <input type="number" name="amount" step="0.01" class="form-control" placeholder="পরিমাণ" required>
     </div>
+    <div class="col-md-2">
+      <input type="text" name="category" class="form-control" placeholder="বিভাগ" required>
+    </div>
+    <div class="col-md-1">
+      <button type="submit" class="btn btn-success">➕ যোগ করুন</button>
+    </div>
+  </form>
+
+  <h4>🗓️ মাসিক খরচ</h4>
+  <?php foreach ($grouped_data as $date => $entries): ?>
+    <div class="date-card">
+      <strong><?= $date ?> | <?= date('l', strtotime($date)) ?></strong>
+      <?php $daily_total = 0; ?>
+      <?php foreach ($entries as $i => $row): ?>
+        <div class="cost-entry"> <?= ($i+1) . '. ' . $row['description'] . ' ' . number_format($row['amount'], 2) . ' টাকা (' . $row['category'] . ')' ?> </div>
+        <?php $daily_total += $row['amount']; ?>
+      <?php endforeach; ?>
+      <strong>মোট়ৰ়ঃ <?= number_format($daily_total) ?> টাকা</strong>
+    </div>
+  <?php endforeach; ?>
+
+  <div class="alert alert-success text-center">
+    ✅ মোট ব্যয়: <?= number_format($total_monthly_cost) ?> টাকা
+    <br> 🧮 অবশিষ্ট: <?= number_format($monthly_balance - $total_monthly_cost, 2) ?> টাকা
   </div>
 </div>
 
-<?php include "includes/session.php"; ?>
-
-<div style="margin-top:5px;" class="tabledataWrapper">
-  <?php include 'includes/fetch_data.php'; ?>
-</div>
-
-<div class="tdetailsWrapper">
-  <div class="tDetails container">
-    <div class="receivedTotal lgb">Received Total: <span id="rcvdTotal"> </span></div>
-    <div class="deliveredTotal gw">Delivered Total: <span id="dlvrdTotal"> </span></div>
-    <div class="cancelTotal awr">Cancel Total: <span id="cancelTotal"> </span></div>
-    <div class="rescheduledTotal awb">Rescheduled Total: <span id="rescheduledTotal"> </span></div>
-    <div class="returnedTotal awr">Returned Total: <span id="returnTotal"> </span></div>
-
-    <div class="deliverdRate gw">Delivered Rate: <span id="dlvrdRate"></span>%</div>
-    <div class="returnRate awr">Return Rate: <span id="returnRate"></span>%</div>
-    <div class="possibleTotal gw">Possible Total: <span id="posiTotal"> </span>(ps)</div>
-    <div class="totalDay lgb">Total Day:  <span id="totalDay"><?= $month_day ?></span></div>
-    <div class="offDay awb">Off Day:  <span id="offDay"> </span></div>
-    <div id="absentRow" class="awr red">Absent:  <span id="absent"> </span></div>
-
-    <div class="totalWorkDay lgb">Working Day:  <span id="totalWrkDay"> </span></div>
-    <div class="possibleWorkDay gw">Day:  <span id="possibleTotalWrkDay"> </span>(Possible)</div>
-    <div class="highDel gw">Highest Delivered:  <span id="highDel"> </span></div>
-    <div class="lowDel bg_royalblue ">Lowest Delivered:  <span id="lowDel"> </span></div>
-    <div class="avarageDelivery lb">Average Delivery:  <span id="avarDel"> </span></div>
-
-    <div class="avarageTk bg_aqua">Average Incentive:  <span id="avarTk"> </span></div>
-    <div class="avarageTotal bg_aqua">Average Total:  <span id="avarageTotalTk"> </span> (tk)</div>
-    <div class="possibleIncome bg_aqua">Possible Incentive:  <span id="possibleIncome"> </span></div>
-    <div class="grossSalary bg_aqua">Fixed Salary:  <span id="grossSalary"> </span></div>
-
-    <?php if ($rider_type == 'biker'): ?>
-      <div class="possibleOilBill bg_aqua">
-          Oil Bill:  <span id="possibleOilBill"><?= htmlspecialchars($user_data['oil_cost']) ?></span> (Possible)
-      </div>
-    <?php endif; ?>
-
-    <div class="estimetTotal bg_aqua black">Estimated Total:  <span id="estimatedTotal"> </span></div>
-    <div class="comissionTotal gw">Comission Tk: <span id="comissiontk"> </span></div>
-    <div class="salary gw">Salary:  <span id="salaryTk"> </span></div>
-
-    <?php if($rider_type == 'biker'): ?>
-        <div class='oilBill gw'>Oil Bill:  <span id='oilBill'> </span></div>
-    <?php endif; ?>
-  </div>
-
-  <div class="container" id="finishedSalary">
-    <h1>Total Salary: <span id="salaryTotal"></span> tk</h1>
-  </div>
-</div>
-<br>
-
-<!-- pass data by hidden -->
-<input type="hidden" class="besic_salary" value="<?= $besic_salary ?>">
-<input type="hidden" class="month_day" value="<?= $month_day ?>">
-<input type="hidden" class="oil_cost" value="<?= $oil_cost ?>">
-
-<script type="text/javascript" src="index.js"></script>
-<script>
-  const icon = document.querySelector(".icon");
-  const headerMenu = document.querySelector(".headerMenu");
-
-  icon.addEventListener("click", () => {
-    headerMenu.style.display = headerMenu.style.display === "block" ? "none" : "block";
-  });
-
-  const yearMonthData = <?= json_encode($yearMonthData); ?>;
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const currentYearSpan = document.getElementById("currentYear");
-    const monthDropdown = document.getElementById("monthDropdown");
-    const prevBtn = document.getElementById("prevYearBtn");
-    const nextBtn = document.getElementById("nextYearBtn");
-
-    const years = Object.keys(yearMonthData).sort();
-    let currentIndex = years.length - 1;
-
-    function renderYear() {
-      const year = years[currentIndex];
-      currentYearSpan.textContent = ` ${year} `;
-      monthDropdown.innerHTML = "";
-
-      yearMonthData[year].forEach(month => {
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = `index.php?year=${year}&month=${month}`;
-        a.className = "dropdown-item";
-        a.textContent = month;
-        li.appendChild(a);
-        monthDropdown.appendChild(li);
-      });
-    }
-
-    function toggleDropdown() {
-      monthDropdown.style.display = monthDropdown.style.display === "block" ? "none" : "block";
-    }
-
-    prevBtn.addEventListener("click", () => {
-      if (currentIndex > 0) {
-        currentIndex--;
-        renderYear();
-        monthDropdown.style.display = "none";
-      }
-    });
-
-    nextBtn.addEventListener("click", () => {
-      if (currentIndex < years.length - 1) {
-        currentIndex++;
-        renderYear();
-        monthDropdown.style.display = "none";
-      }
-    });
-
-    currentYearSpan.addEventListener("click", toggleDropdown);
-    currentYearSpan.addEventListener("mouseenter", toggleDropdown);
-    monthDropdown.addEventListener("mouseleave", () => {
-      monthDropdown.style.display = "none";
-    });
-
-    renderYear();
-  });
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

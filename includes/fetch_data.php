@@ -10,7 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 $monthDESC = "'December', 'November', 'October', 'September', 'August', 'July', 'June', 'May', 'April', 'March', 'February', 'January'";
 
-$sqlLatest = "SELECT `year`, `month` FROM `month` WHERE user_id='$user_id' ORDER BY `year` DESC, FIELD(`month`, $monthDESC) LIMIT 1";
+$sqlLatest = "SELECT `year`, `month` FROM `cost_month` WHERE user_id='$user_id' ORDER BY `year` DESC, FIELD(`month`, $monthDESC) LIMIT 1";
 $resultLatest = $con->query($sqlLatest);
 $latestYear = null;
 $latestMonth = null;
@@ -24,7 +24,7 @@ if ($resultLatest->num_rows > 0) {
 $year = isset($_GET['year']) ? $_GET['year'] : $latestYear;
 $month = isset($_GET['month']) ? $_GET['month'] : $latestMonth;
 
-$sqlFetch = "SELECT * FROM `data` WHERE `year` = '$year' AND `month` = '$month' AND user_id='$user_id'";
+$sqlFetch = "SELECT * FROM `cost_data` WHERE `year` = '$year' AND `month` = '$month' AND user_id='$user_id'";
 $fetch_result = $con->query($sqlFetch);
 
 echo"<div class='container selectTable'>Selected Month: <span>$month-$year</span></div>";

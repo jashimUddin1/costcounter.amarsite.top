@@ -14,7 +14,7 @@ if(isset($_POST['submit_btn']))
 {
     // Retrieve the table name from the hidden input field
     $user_id = $_SESSION['auth_user']['id'];
-    $tableName = 'data';
+    $tableName = 'cost_data';
     $year = mysqli_real_escape_string($con, $_POST["year"]);
     $month = mysqli_real_escape_string($con, $_POST["month"]);
 

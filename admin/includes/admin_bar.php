@@ -25,7 +25,7 @@
                                         
                                         // Fetch years and months
                                         $sql = "SELECT `year`, `month` 
-                                                FROM `month` 
+                                                FROM `cost_month` 
                                                 WHERE user_id='$user_id' 
                                                 ORDER BY `year` ASC, FIELD(`month`, $monthOrder)";
                                   
