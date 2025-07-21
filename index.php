@@ -1,214 +1,227 @@
-<?php
-session_start();
-include 'db/dbcon.php';
-$page_title = "Home";
-include 'includes/header.php';
-include 'includes/navbar.php';
 
+<?php 
+  session_start();
+  include("db/dbcon.php");
 
+  if (!isset($_SESSION['authenticated'])) {
+      header("location: login/index.php");
+      exit();
+  }
 
-// ব্যালেন্স বের করা
-$balance = 0;
-$setting_query = "SELECT * FROM settings WHERE `key` = 'balance' LIMIT 1";
-$setting_result = mysqli_query($con, $setting_query);
-if ($setting_result && mysqli_num_rows($setting_result) > 0) {
-    $row = mysqli_fetch_assoc($setting_result);
-    $balance = $row['value'];
-    $balance_id = $row['id'];
-}
+  $user_id = $_SESSION["auth_user"]["id"];
 
-// ট্রান্সেকশন লোড করা
-$transactions = [];
-$query = "SELECT * FROM transactions ORDER BY trans_date DESC, serial ASC";
-$result = mysqli_query($con, $query);
-while ($row = mysqli_fetch_assoc($result)) {
-    $transactions[$row['trans_date']][] = $row;
-}
+  $monthOrder = "'January','February','March','April','May','June','July','August','September','October','November','December'";
+  $monthDESC = "'December','November','October','September','August','July','June','May','April','March','February','January'";
+
+  // Month-Year Data Grouped
+  $yearMonthData = [];
+  $stmt = $con->prepare("SELECT year, month FROM month WHERE user_id = ? ORDER BY year ASC, FIELD(month, $monthOrder)");
+  $stmt->bind_param("i", $user_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  while ($row = $result->fetch_assoc()) {
+      $year = htmlspecialchars($row['year']);
+      $month = htmlspecialchars($row['month']);
+      $yearMonthData[$year][] = $month;
+  }
+  $stmt->close();
+
+  // Latest year & month with day (combined)
+  $latestYear = $latestMonth = $month_day = null;
+  $stmtLatest = $con->prepare("SELECT year, month, day FROM month WHERE user_id = ? ORDER BY year DESC, FIELD(month, $monthDESC) LIMIT 1");
+  $stmtLatest->bind_param("i", $user_id);
+  $stmtLatest->execute();
+  $resultLatest = $stmtLatest->get_result();
+  if ($row = $resultLatest->fetch_assoc()) {
+      $latestYear = $row['year'];
+      $latestMonth = $row['month'];
+      $month_day = htmlspecialchars($row['day']);
+  }
+  $stmtLatest->close();
+
+  // GET override fallback
+  $year = isset($_GET['year']) ? $_GET['year'] : $latestYear;
+  $month = isset($_GET['month']) ? $_GET['month'] : $latestMonth;
+
+  // Fetch day count for selected month/year
+  $stmtDay = $con->prepare("SELECT day FROM month WHERE user_id = ? AND month = ? AND year = ? LIMIT 1");
+  $stmtDay->bind_param("iss", $user_id, $month, $year);
+  $stmtDay->execute();
+  $resultDay = $stmtDay->get_result();
+  if ($row = $resultDay->fetch_assoc()) {
+      $month_day = htmlspecialchars($row['day']);
+  }
+  $stmtDay->close();
+
+  // User info
+  $stmtUser = $con->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
+  $stmtUser->bind_param("i", $user_id);
+  $stmtUser->execute();
+  $resultUser = $stmtUser->get_result();
+  $user_data = $resultUser->fetch_assoc();
+  $stmtUser->close();
+
+  $besic_salary = htmlspecialchars($user_data['basic_salary']);
+  $rider_type = htmlspecialchars($user_data['riderType']);
+  $oil_cost = htmlspecialchars($user_data['oil_cost']);
 ?>
 
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0 mt-3">📋 ডেইলি খরচ এন্ট্রি</h2>
-        <a href="summary" class="btn btn-sm btn-primary">Dashboard</a>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link href="assets/css/styles.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+<div class="headerWrapper">
+  <div class="header">
+    <div class="headerLogo">
+      <a href="#">Developer Jasim</a>
     </div>
-
-    <form action="core_php/store.php" method="POST" class="row g-3 mb-4">
-        <div class="col-md-3">
-            <label class="form-label">তারিখ</label>
-            <input type="date" name="trans_date" id="trans_date" class="form-control" required>
-        </div>
-
-        <input type="hidden" name="day_name" id="day_name">
-
-        <div class="col-md-3">
-            <label class="form-label">খরচের বিবরণ</label>
-            <input type="text" name="description" class="form-control" required>
-        </div>
-
-        <div class="col-md-2">
-            <label class="form-label">পরিমাণ (৳)</label>
-            <input type="number" name="amount" class="form-control" required>
-        </div>
-
-        <div class="col-md-2">
-            <label class="form-label">-- নির্বাচন করুন --</label>
-            <select name="category" class="form-select">
-                <?php
-                $categories = ['বাজার','বাহিরেরখরচ','মোবাইল','বাসা ভাড়া','গাড়িভাড়া ',
-                'মালজিনিস','কসমেটিক্স','বইখাতা','ঘোরাঘুরি','কেনাকাটা','ঔষধ',
-                'পরিবার','সাইকেলমেরামত','গৃহস্থালী জিনিসপত্র','গৃহস্থালী মেরামত',
-                'অন্যান্য','প্রাপ্তি','প্রদান','আয়'];
-
-                foreach ($categories as $cat) {
-                    echo "<option value=\"$cat\">$cat</option>";
-                }
-                ?>
-            </select>
-        </div>
-
-        <div class="col-md-2 d-grid">
-            <label class="form-label invisible">Add</label>
-            <button type="submit" class="btn btn-primary">➕ যোগ করুন</button>
-        </div>
-    </form>
-<hr>
-
-<hr>
-    <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
-        <h4 class="mb-0">🗓️ প্রতিদিনের লেনদেন</h4>
-        <div class="d-flex ">
-            <h4 class="mb-0">অবশিষ্ট <span id="balanceAmount"><?= $balance ?></span> টাকা</h4>
-
-            <button 
-                class="btn btn-sm btn-outline-secondary edit-btn" 
-                data-bs-toggle="modal" 
-                data-bs-target="#editBalanceModal"
-                data-id="<?= $balance_id ?? '' ?>"
-                data-value="<?= $balance ?? '' ?>"
-            >
-                ✏️
-            </button>
-        </div>
+    <div class="menuIcon">
+      <span class="icon">&#9776;</span>
     </div>
-
-    <!-- ব্যালেন্স এডিট Modal -->
-    <div class="modal fade" id="editBalanceModal" tabindex="-1" aria-labelledby="editBalanceModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form action="core_php/update_balance.php" method="POST">
-            <input type="hidden" name="id" id="edit-setting-id">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">Edit Balance</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                  <div class="mb-3">
-                      <label for="value" class="form-label">Balance</label>
-                      <input type="number" class="form-control" name="value" id="edit-setting-value" required>
-                  </div>
-              </div>
-              <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Save changes</button>
-              </div>
-            </div>
-        </form>
-      </div>
-    </div>
-
-    <?php
-    $grand_total = 0;
-    foreach ($transactions as $date => $records):
-    ?>
-        <div class="card mb-3">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <div>
-                    <strong><?= date("d-m-Y", strtotime($date)) ?></strong> | <?= $records[0]['day_name'] ?? '' ?>
-                </div>
-                <button 
-                    class="btn btn-sm btn-outline-secondary edit-date-btn" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#editDateModal"
-                    data-date="<?= $date ?>"
-                >
-                    ✏️ তারিখ পরিবর্তন
-                </button>
-            </div>
-
-            <div class="card-body">
-                <?php
-                $total = 0;
-                echo '<ul class="list-group list-group-flush">';
-                foreach ($records as $txn):
-                    $total += $txn['amount'];
-                ?>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <?= $txn['serial'] ?>. <?= $txn['description'] ?> <?= $txn['amount'] ?> টাকা (<?= $txn['category'] ?>)
-                        <span class="badge bg-primary rounded-pill"><?= $txn['amount'] ?>৳</span>
-                    </li>
-                <?php endforeach; ?>
-                </ul>
-                <div class="mt-2 fw-bold">🔸 মোট: <?= $total ?> টাকা</div>
-                <?php $grand_total += $total; ?>
-            </div>
-        </div>
-    <?php endforeach; ?>
-
-    <div class="alert alert-success text-center fs-5">
-        ✅ মোট ব্যয়: <strong><?= $grand_total ?> টাকা</strong>
-    </div>
-</div>
-
-<!-- Edit Date Modal -->
-<div class="modal fade" id="editDateModal" tabindex="-1" aria-labelledby="editDateModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form action="core_php/update_date.php" method="POST">
-        <input type="hidden" name="old_date" id="edit-old-date">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">🔧 তারিখ পরিবর্তন করুন</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="headerMenu">
+      <ul>
+        <li class="nav-item dropdown">
+          <div id="yearNavigator" style="display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative;">
+            <button id="prevYearBtn">&lt;</button>
+            <span id="currentYear" class="dropbtn" style="color: white;">Year</span>
+            <button id="nextYearBtn">&gt;</button>
+            <ul id="monthDropdown" class="dropdown-menu dropdown-content" style="position: absolute; top: 30px; display: none; background: white; border: 1px solid #ccc; padding: 5px; z-index: 1000;"></ul>
           </div>
-          <div class="modal-body">
-              <div class="mb-3">
-                  <label for="new_date" class="form-label">নতুন তারিখ</label>
-                  <input type="date" class="form-control" name="new_date" id="edit-new-date" required>
-              </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">✅ পরিবর্তন করুন</button>
-          </div>
-        </div>
-    </form>
+        </li>
+        <li><a id="adminBtn" href="admin">Admin Panel</a></li>
+      </ul>
+    </div>
   </div>
 </div>
 
+<?php include "includes/session.php"; ?>
+
+<div style="margin-top:5px;" class="tabledataWrapper">
+  <?php include 'includes/fetch_data.php'; ?>
+</div>
+
+<div class="tdetailsWrapper">
+  <div class="tDetails container">
+    <div class="receivedTotal lgb">Received Total: <span id="rcvdTotal"> </span></div>
+    <div class="deliveredTotal gw">Delivered Total: <span id="dlvrdTotal"> </span></div>
+    <div class="cancelTotal awr">Cancel Total: <span id="cancelTotal"> </span></div>
+    <div class="rescheduledTotal awb">Rescheduled Total: <span id="rescheduledTotal"> </span></div>
+    <div class="returnedTotal awr">Returned Total: <span id="returnTotal"> </span></div>
+
+    <div class="deliverdRate gw">Delivered Rate: <span id="dlvrdRate"></span>%</div>
+    <div class="returnRate awr">Return Rate: <span id="returnRate"></span>%</div>
+    <div class="possibleTotal gw">Possible Total: <span id="posiTotal"> </span>(ps)</div>
+    <div class="totalDay lgb">Total Day:  <span id="totalDay"><?= $month_day ?></span></div>
+    <div class="offDay awb">Off Day:  <span id="offDay"> </span></div>
+    <div id="absentRow" class="awr red">Absent:  <span id="absent"> </span></div>
+
+    <div class="totalWorkDay lgb">Working Day:  <span id="totalWrkDay"> </span></div>
+    <div class="possibleWorkDay gw">Day:  <span id="possibleTotalWrkDay"> </span>(Possible)</div>
+    <div class="highDel gw">Highest Delivered:  <span id="highDel"> </span></div>
+    <div class="lowDel bg_royalblue ">Lowest Delivered:  <span id="lowDel"> </span></div>
+    <div class="avarageDelivery lb">Average Delivery:  <span id="avarDel"> </span></div>
+
+    <div class="avarageTk bg_aqua">Average Incentive:  <span id="avarTk"> </span></div>
+    <div class="avarageTotal bg_aqua">Average Total:  <span id="avarageTotalTk"> </span> (tk)</div>
+    <div class="possibleIncome bg_aqua">Possible Incentive:  <span id="possibleIncome"> </span></div>
+    <div class="grossSalary bg_aqua">Fixed Salary:  <span id="grossSalary"> </span></div>
+
+    <?php if ($rider_type == 'biker'): ?>
+      <div class="possibleOilBill bg_aqua">
+          Oil Bill:  <span id="possibleOilBill"><?= htmlspecialchars($user_data['oil_cost']) ?></span> (Possible)
+      </div>
+    <?php endif; ?>
+
+    <div class="estimetTotal bg_aqua black">Estimated Total:  <span id="estimatedTotal"> </span></div>
+    <div class="comissionTotal gw">Comission Tk: <span id="comissiontk"> </span></div>
+    <div class="salary gw">Salary:  <span id="salaryTk"> </span></div>
+
+    <?php if($rider_type == 'biker'): ?>
+        <div class='oilBill gw'>Oil Bill:  <span id='oilBill'> </span></div>
+    <?php endif; ?>
+  </div>
+
+  <div class="container" id="finishedSalary">
+    <h1>Total Salary: <span id="salaryTotal"></span> tk</h1>
+  </div>
+</div>
+<br>
+
+<!-- pass data by hidden -->
+<input type="hidden" class="besic_salary" value="<?= $besic_salary ?>">
+<input type="hidden" class="month_day" value="<?= $month_day ?>">
+<input type="hidden" class="oil_cost" value="<?= $oil_cost ?>">
+
+<script type="text/javascript" src="index.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.edit-btn').forEach(function (button) {
-            button.addEventListener('click', function () {
-                document.getElementById('edit-setting-id').value = button.getAttribute('data-id');
-                document.getElementById('edit-setting-value').value = button.getAttribute('data-value');
-            });
-        });
+  const icon = document.querySelector(".icon");
+  const headerMenu = document.querySelector(".headerMenu");
 
-        document.querySelectorAll('.edit-date-btn').forEach(function (button) {
-            button.addEventListener('click', function () {
-                const date = button.getAttribute('data-date');
-                document.getElementById('edit-old-date').value = date;
-                document.getElementById('edit-new-date').value = date;
-            });
-        });
+  icon.addEventListener("click", () => {
+    headerMenu.style.display = headerMenu.style.display === "block" ? "none" : "block";
+  });
 
-        const transDateInput = document.getElementById('trans_date');
-        const dayNameInput = document.getElementById('day_name');
-        if (transDateInput) {
-            transDateInput.addEventListener('change', function () {
-                const date = new Date(this.value);
-                const banglaDays = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
-                dayNameInput.value = banglaDays[date.getDay()];
-            });
-        }
+  const yearMonthData = <?= json_encode($yearMonthData); ?>;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const currentYearSpan = document.getElementById("currentYear");
+    const monthDropdown = document.getElementById("monthDropdown");
+    const prevBtn = document.getElementById("prevYearBtn");
+    const nextBtn = document.getElementById("nextYearBtn");
+
+    const years = Object.keys(yearMonthData).sort();
+    let currentIndex = years.length - 1;
+
+    function renderYear() {
+      const year = years[currentIndex];
+      currentYearSpan.textContent = ` ${year} `;
+      monthDropdown.innerHTML = "";
+
+      yearMonthData[year].forEach(month => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = `index.php?year=${year}&month=${month}`;
+        a.className = "dropdown-item";
+        a.textContent = month;
+        li.appendChild(a);
+        monthDropdown.appendChild(li);
+      });
+    }
+
+    function toggleDropdown() {
+      monthDropdown.style.display = monthDropdown.style.display === "block" ? "none" : "block";
+    }
+
+    prevBtn.addEventListener("click", () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderYear();
+        monthDropdown.style.display = "none";
+      }
     });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentIndex < years.length - 1) {
+        currentIndex++;
+        renderYear();
+        monthDropdown.style.display = "none";
+      }
+    });
+
+    currentYearSpan.addEventListener("click", toggleDropdown);
+    currentYearSpan.addEventListener("mouseenter", toggleDropdown);
+    monthDropdown.addEventListener("mouseleave", () => {
+      monthDropdown.style.display = "none";
+    });
+
+    renderYear();
+  });
 </script>
 
-<?php include 'includes/footer.php'; ?>
+</body>
+</html>

@@ -20,6 +20,8 @@ if (isset($_POST['register_btn'])) {
     $lname = mysqli_real_escape_string($con, $_POST['lname']);
     $phone = mysqli_real_escape_string($con, $_POST['phone']);
     $email = mysqli_real_escape_string($con, $_POST['email']);
+    $riderType = mysqli_real_escape_string($con, $_POST['riderType']);
+    $defaultRate = (int)mysqli_real_escape_string($con, $_POST['defaultRate']);
     $password = mysqli_real_escape_string($con, $_POST['password']);
     $confirm_password = mysqli_real_escape_string($con, $_POST['confirm_password']);
 
@@ -35,6 +37,11 @@ if (isset($_POST['register_btn'])) {
         exit(0);
     }
     
+    if ($defaultRate < 20 || $defaultRate > 40) {
+        $_SESSION['status'] = "Default Rate must be between 20 and 40.";
+        header("Location: register.php");
+        exit(0);
+    }
 
     $hashed_password = password_hash($confirm_password, PASSWORD_DEFAULT); 
     $verify_token = md5(rand());
@@ -48,7 +55,7 @@ if (isset($_POST['register_btn'])) {
         header("Location: register.php");
         exit(0);
     } else {
-        $query = "INSERT INTO `users`(`first_name`, `last_name`, `phone`, `email`, `password`, `verify_token`, `created_at`, `role`, `user_ip`, `client_ip`, `remote_host`,`user_agent`) VALUES ('$fname', '$lname', '$phone', '$email', '$hashed_password', '$verify_token', '$time', 'user', '$user_ip', '$client_ip', '$remote_host', '$user_agent')";
+        $query = "INSERT INTO `users`(`first_name`, `last_name`, `phone`, `email`, `password`, `verify_token`, `created_at`, `riderType`, `defaultRate`, `role`, `user_ip`, `client_ip`, `remote_host`,`user_agent`) VALUES ('$fname', '$lname', '$phone', '$email', '$hashed_password', '$verify_token', '$time', '$riderType', ' $defaultRate', 'user', '$user_ip', '$client_ip', '$remote_host', '$user_agent')";
         $query_run = mysqli_query($con, $query);
 
         if ($query_run) {
@@ -74,15 +81,17 @@ if (isset($_POST['register_btn'])) {
 function sendVerificationEmail($email, $verify_token) {
     $mail = new PHPMailer();
     $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
+    $mail->Host = 'amarsite.top'; // Gmail SMTP হোস্ট
     $mail->SMTPAuth = true;
-    $mail->Username = 'developermdjasim@gmail.com'; 
-    $mail->Password = 'izts stcl gvkm gnql';
+    $mail->Username = 'salary@amarsite.top';
+    $mail->Password = 'KQe;74!ZFz=q';
     $mail->SMTPSecure = 'tls';
     $mail->Port = 587;
 
-    $mail->setFrom('developermdjasim@gmail.com', 'Developer Jasim');
+    $mail->setFrom('salary@amarsite.top', 'Developer Jasim');
+    $mail->addReplyTo('salary@amarsite.top', 'Developer Jasim');
     $mail->addAddress($email);
+
     $mail->isHTML(true);
     $mail->Subject = "Verify your email";
     $mail->Body = "

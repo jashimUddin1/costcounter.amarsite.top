@@ -15,30 +15,26 @@
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
                             <ul class="navbar-nav text-center ms-auto mb-2 mb-lg-0">
-                                <?php if (isset($_SESSION['authenticated'])) : ?>
+
                                 <li class="nav-item">
-                                    <a class="nav-link" href="../index.php">Home</a>
+                                    <a class="nav-link" href="index.php">Home</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="../admin">Admin</a>
+                                    <a class="nav-link" href="admin.php">Admin</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="profile.php">Profile</a>
                                 </li>
-                                <?php endif ?>
-                                <?php if (!isset($_SESSION['authenticated'])) : ?>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="register.php">Register</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="login.php">Login</a>
-                                    </li>
-                                <?php endif ?>
-                                <?php if (isset($_SESSION['authenticated'])) : ?>
-                                    <li class="nav-item">
-                                        <a class="btn btn-danger" href="logout.php">Logout</a>
-                                    </li>
-                                <?php endif ?>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="register.php">Register</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="login.php">Login</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="btn btn-danger" href="logout.php">Logout</a>
+                                </li>
+                                
                             </ul>
 
                         </div>

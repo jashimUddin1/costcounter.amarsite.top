@@ -22,7 +22,7 @@ include('includes/header.php');
                 <!-- Company Logo + Name -->
                 <div class="shadow d-flex justify-content-between text-center">
                     <img src="../images/logo.png" alt="image" style="max-width: 200px; max-height: 80px;">
-                    <h2 class="fw-bold mt-3 text-white mx-3">Daily Cost Counter</h2>
+                    <h2 class="fw-bold mt-3 text-white mx-3">Salary Count</h2>
                 </div>
 
             </div>
@@ -80,6 +80,23 @@ include('includes/header.php');
                             </div>
                             
 
+                            <div class="row mb-3">
+                                <div class="col-md-6 form-group">
+                                    <label for="
+                                    ">Select Rider Type</label>
+                                    <select style="width:100%" name="riderType" id="riderType" class="form-control form-control-lg">
+                                        <option value="cyclist">By Cycle</option>
+                                        <option value="biker">Biker</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label for="defaultRate">Set Default Rate</label>
+                                    <input type="number" id="defaultRate" name="defaultRate" class="form-control form-control-lg" placeholder="Zone Rate (20-40)" required>
+                                    <small id="defaultRate-error" class="error-msg" style="color:red"></small>
+                                </div>
+                            </div>
+
                             <div class="form-group mb-3">
                                 <label for="password">Password</label>
                                 <div class="input-group">
@@ -126,6 +143,8 @@ include('includes/header.php');
     const fname = document.getElementById('fname');
     const phone = document.getElementById('phone');
     const phoneError = document.getElementById('phone-error');
+    const defaultRate = document.getElementById('defaultRate');
+    const defaultRateError = document.getElementById('defaultRate-error');
     const signup_password = document.getElementById('password');
     const confirm_password = document.getElementById('confirm_password');
     const signup_password_error = document.getElementById('signup-password-error');
@@ -155,6 +174,15 @@ include('includes/header.php');
             email_error.textContent = "Invalid email. Must be a Gmail address.";
         } else {
             email_error.textContent = "";
+        }
+    });
+
+    defaultRate.addEventListener('input', () => {
+        const value = parseInt(defaultRate.value);
+        if (value < 20 || value > 40) {
+            defaultRateError.textContent = "Default rate must be between 20 and 40.";
+        } else {
+            defaultRateError.textContent = "";
         }
     });
 
@@ -191,8 +219,11 @@ include('includes/header.php');
     // validation check and then submit
     function isFormValid() {
         let valid = true;
+        const rateValue = parseInt(defaultRate.value);
+
 
         if (fname.value.trim() === "") valid = false;
+        if (rateValue < 20 || rateValue > 40) valid = false;
         if (phone.value.length < 9) valid = false;
         if (!signup_email.value.endsWith("@gmail.com")) valid = false;
         if (signup_password.value.length < 8) valid = false;
