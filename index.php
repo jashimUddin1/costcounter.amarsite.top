@@ -146,10 +146,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <strong><?= $date ?> | <?= date('l', strtotime($date)) ?></strong>
       <?php $daily_total = 0; ?>
       <?php foreach ($entries as $i => $row): ?>
-        <div class="cost-entry"> <?= ($i+1) . '. ' . $row['description'] . ' ' . number_format($row['amount'], 2) . ' টাকা (' . $row['category'] . ')' ?> </div>
+        <div class="cost-entry"> <?= ($i+1) . '. ' . $row['description'] . ' ' . number_format($row['amount'], 0) . ' টাকা (' . $row['category'] . ')' ?> </div>
         <?php $daily_total += $row['amount']; ?>
       <?php endforeach; ?>
-      <strong>মোট়ৰ়ঃ <?= number_format($daily_total) ?> টাকা</strong>
+      <strong>মোট: <?= number_format($daily_total) ?> টাকা</strong>
     </div>
   <?php endforeach; ?>
 
