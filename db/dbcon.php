@@ -4,8 +4,12 @@ $dbUser = "root";
 $dbPwd = "";
 $dbName  = "cost_counter_salary";
 
+// $host =  "localhost";
+// $dbUser = "amarsite";
+// $dbPwd = "7[Vq3B7NeJp4g;a";
+// $dbName  = "amarsite_cost_counter";
+
 $con = mysqli_connect($host, $dbUser, $dbPwd, $dbName);
 if(!$con){
     die("Connection failed:". mysqli_connect_error());
 }
-?>
