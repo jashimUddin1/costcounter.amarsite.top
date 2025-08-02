@@ -27,7 +27,7 @@ include('includes/header.php');
                 <!-- 🔰 Company Logo + Name -->
                 <div class="shadow d-flex justify-content-between text-center">
                     <img src="../images/logo.png" alt="image" style="max-width: 200px; max-height: 75px;">
-                    <h2 class="fw-bold mt-3 text-white mx-3">Salary Count</h2>
+                    <h2 class="fw-bold mt-3 text-white mx-3">Cost Counter</h2>
                 </div>
 
             </div>
