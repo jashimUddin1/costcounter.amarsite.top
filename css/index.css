@@ -1,0 +1,21 @@
+@media (max-width: 576px) {
+  .entry-header,
+  .selectionMenu {
+    font-size: 11px !important;
+  }
+
+  .entry-header select,
+  .selectionMenu button,
+  .selectionMenu a {
+    font-size: 11px !important;
+  }
+
+  .entry-header .badge {
+    font-size: 11px !important;
+  }
+
+  .dropdown-menu a,
+  .dropdown-menu button {
+    font-size: 11px !important;
+  }
+}
