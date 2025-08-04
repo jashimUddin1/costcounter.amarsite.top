@@ -159,15 +159,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
 
+    <?php
+    function eng_to_bn($str)
+    {
+      $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+      $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      return str_replace($eng, $bn, $str);
+    }
+
+function bn_full_date($date_string) {
+    $months_bn = [
+        'January' => 'জানুয়ারি',
+        'February' => 'ফেব্রুয়ারি',
+        'March' => 'মার্চ',
+        'April' => 'এপ্রিল',
+        'May' => 'মে',
+        'June' => 'জুন',
+        'July' => 'জুলাই',
+        'August' => 'আগস্ট',
+        'September' => 'সেপ্টেম্বর',
+        'October' => 'অক্টোবর',
+        'November' => 'নভেম্বর',
+        'December' => 'ডিসেম্বর'
+    ];
+
+    $days_bn = [
+        'Saturday' => 'শনিবার',
+        'Sunday' => 'রবিবার',
+        'Monday' => 'সোমবার',
+        'Tuesday' => 'মঙ্গলবার',
+        'Wednesday' => 'বুধবার',
+        'Thursday' => 'বৃহস্পতিবার',
+        'Friday' => 'শুক্রবার'
+    ];
+
+      $timestamp = strtotime($date_string);
+      $day_num = date('j', $timestamp); // 1-31 without leading zero
+      $month = date('F', $timestamp); // Full month name
+      $year = date('Y', $timestamp);
+      $day_eng = date('l', $timestamp);
+
+      return eng_to_bn($day_num) . ' ' . $months_bn[$month] . ' ' . eng_to_bn($year) . ' | ' . $days_bn[$day_eng] ;
+    }
+    ?>
+
+
     <?php foreach ($grouped_data as $date => $records): ?>
       <div class="card mb-3">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
           <div>
-            <strong><?= date("d-m-Y", strtotime($date)) ?></strong> | <?= $records[0]['day_name'] ?? '' ?>
+            <strong><?= bn_full_date($date) ?></strong>
+
           </div>
 
           <button class="btn btn-sm btn-outline-secondary edit-date-btn" data-bs-toggle="modal"
-            data-bs-target="#editDateModal" data-date="<?= $date ?>">
+            data-bs-target="#editDateModal" data-date="<?= date('Y-m-d', strtotime($date)) ?>">
             ✏️ তারিখ পরিবর্তন
           </button>
         </div>
@@ -182,20 +228,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } ?>
             <li class="list-group-item d-flex justify-content-between align-items-center">
               <div>
-                <?= $i ?>. <?= $txn['description'] ?>     <?= $txn['amount'] ?> টাকা (<?= $txn['category'] ?>)
+                <?= eng_to_bn($i) ?>. <?= $txn['description'] ?>     <?= eng_to_bn($txn['amount']) ?> টাকা
+                (<?= $txn['category'] ?>)
               </div>
               <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-primary rounded-pill"><?= $txn['amount'] ?>৳</span>
+                <span class="badge bg-primary rounded-pill"><?= eng_to_bn($txn['amount']) ?>৳</span>
 
                 <!-- Edit Button -->
-                <button class="btn btn-sm btn-outline-warning edit-btn"
-                        data-id="<?= $txn['id'] ?>"
-                        data-description="<?= htmlspecialchars($txn['description']) ?>"
-                        data-amount="<?= $txn['amount'] ?>"
-                        data-category="<?= htmlspecialchars($txn['category']) ?>"
-                        data-bs-toggle="modal"
-                        data-bs-target="#editCostDataModal">
-                    ✏️
+                <button class="btn btn-sm btn-outline-warning edit-btn" data-id="<?= $txn['id'] ?>"
+                  data-description="<?= htmlspecialchars($txn['description']) ?>" data-amount="<?= $txn['amount'] ?>"
+                  data-category="<?= htmlspecialchars($txn['category']) ?>" data-bs-toggle="modal"
+                  data-bs-target="#editCostDataModal">
+                  ✏️
                 </button>
 
                 <!-- Delete Button -->
@@ -205,12 +249,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </li>
             <?php $i++; endforeach; ?>
           </ul>
-          <div class="mt-2 fw-bold">🔸 মোট: <?= $total ?> টাকা</div>
-         
-
+          <div class="mt-2 fw-bold">🔸 মোট: <?= eng_to_bn($total) ?> টাকা</div>
         </div>
       </div>
     <?php endforeach; ?>
+
 
 
     <div class="alert alert-success text-center fs-5">

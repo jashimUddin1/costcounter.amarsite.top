@@ -2,17 +2,24 @@
 session_start();
 include("../db/dbcon.php");
 
-// ইউজার অথেনটিকেশন চেক করতে চাইলে এখানে কোড দিতে পারো
+if (!isset($_SESSION['authenticated'])) {
+  header("location: ../login/index.php");
+  exit();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'];
     $description = $_POST['description'];
     $amount = $_POST['amount'];
     $category = $_POST['category'];
+    $date = $_POST['date'];
 
-    $updateQuery = "UPDATE cost_data SET description = ?, amount = ?, category = ? WHERE id = ?";
+    $day_name_eng = date("l", strtotime($date));
+    $day_name = $day_name_eng;
+
+    $updateQuery = "UPDATE cost_data SET description = ?, amount = ?, category = ?, date = ?, day_name = ? WHERE id = ?";
     $stmt = $con->prepare($updateQuery);
-    $stmt->bind_param("sdsi", $description, $amount, $category, $id);
+    $stmt->bind_param("sdsssi", $description, $amount, $category, $date, $day_name, $id);
 
     if ($stmt->execute()) {
         $_SESSION['success'] = "✅ খরচ সফলভাবে আপডেট হয়েছে!";

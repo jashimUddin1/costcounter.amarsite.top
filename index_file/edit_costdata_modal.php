@@ -12,6 +12,11 @@
           <input type="hidden" name="id" id="edit-id">
 
           <div class="mb-3">
+            <label for="edit-date" class="form-label">তারিখ</label>
+            <input type="date" class="form-control" name="date" id="edit-date" required value="<?= $txn['date'] ?>">
+          </div>
+
+          <div class="mb-3">
             <label for="edit-description" class="form-label">বিবরণ</label>
             <input type="text" class="form-control" name="description" id="edit-description" required>
           </div>

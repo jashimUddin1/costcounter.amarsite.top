@@ -7,7 +7,7 @@
 
     <div class="col-md-2">
         <label class="form-label">তারিখ</label>
-        <input type="date" name="date" id="trans_date" placeholder="তারিখ দিন" class="form-control" required>
+        <input type="date" name="date" id="trans_date" placeholder="তারিখ" class="form-control" required>
     </div>
 
     <div class="col-md-4">

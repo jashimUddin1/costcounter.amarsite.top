@@ -1,6 +1,6 @@
 <div class="modal fade" id="editDateModal" tabindex="-1" aria-labelledby="editDateModalLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <form action="core_php/update_date.php" method="POST">
+    <form action="core_file/update_date.php" method="POST">
       <input type="hidden" name="old_date" id="edit-old-date">
       <div class="modal-content">
         <div class="modal-header">
@@ -20,3 +20,18 @@
     </form>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const editButtons = document.querySelectorAll('.edit-date-btn');
+  const oldDateInput = document.getElementById('edit-old-date');
+
+  editButtons.forEach(button => {
+    button.addEventListener('click', function () {
+      const date = this.getAttribute('data-date');
+      oldDateInput.value = date;
+    });
+  });
+});
+</script>
+
