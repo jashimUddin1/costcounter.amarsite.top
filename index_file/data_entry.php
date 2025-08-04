@@ -7,7 +7,7 @@
 
     <div class="col-md-2">
         <label class="form-label">তারিখ দিন</label>
-        <input type="date" name="date" id="trans_date" placeholder="তারিখ" class="form-control" required>
+        <input type="date" name="date" id="trans_date" placeholder="তারিখ" class="form-control" required value="<?= date('Y-m-d') ?>">
     </div>
 
     <div class="col-md-4">
