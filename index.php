@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- 👇 মাসিক খরচ শুরু -->
   <div class="costDetails">
-    <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-3 monthly-cost-header">
       <h4 class="mb-0">🗓️ মাসের খরচ</h4>
 
       <form method="GET" class="d-inline-block ms-3">

@@ -6,7 +6,7 @@
     <input type="hidden" name="redirect_query" value="<?= htmlspecialchars($query_string) ?>">
 
     <div class="col-md-2">
-        <label class="form-label">তারিখ</label>
+        <label class="form-label">তারিখ দিন</label>
         <input type="date" name="date" id="trans_date" placeholder="তারিখ" class="form-control" required>
     </div>
 

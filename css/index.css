@@ -1,16 +1,22 @@
 @media (max-width: 576px) {
   .entry-header,
-  .selectionMenu {
+  .selectionMenu,
+  .monthly-cost-header {
     font-size: 11px !important;
   }
 
   .entry-header select,
   .selectionMenu button,
-  .selectionMenu a {
+  .selectionMenu a,
+  .monthly-cost-header select,
+  .monthly-cost-header button,
+  .monthly-cost-header h4,
+  .monthly-cost-header span {
     font-size: 11px !important;
   }
 
-  .entry-header .badge {
+  .entry-header .badge,
+  .monthly-cost-header .badge {
     font-size: 11px !important;
   }
 
