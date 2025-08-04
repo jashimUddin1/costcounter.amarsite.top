@@ -167,8 +167,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return str_replace($eng, $bn, $str);
     }
 
-function bn_full_date($date_string) {
-    $months_bn = [
+    function bn_full_date($date_string)
+    {
+      $months_bn = [
         'January' => 'জানুয়ারি',
         'February' => 'ফেব্রুয়ারি',
         'March' => 'মার্চ',
@@ -181,9 +182,9 @@ function bn_full_date($date_string) {
         'October' => 'অক্টোবর',
         'November' => 'নভেম্বর',
         'December' => 'ডিসেম্বর'
-    ];
+      ];
 
-    $days_bn = [
+      $days_bn = [
         'Saturday' => 'শনিবার',
         'Sunday' => 'রবিবার',
         'Monday' => 'সোমবার',
@@ -191,7 +192,7 @@ function bn_full_date($date_string) {
         'Wednesday' => 'বুধবার',
         'Thursday' => 'বৃহস্পতিবার',
         'Friday' => 'শুক্রবার'
-    ];
+      ];
 
       $timestamp = strtotime($date_string);
       $day_num = date('j', $timestamp); // 1-31 without leading zero
@@ -199,7 +200,7 @@ function bn_full_date($date_string) {
       $year = date('Y', $timestamp);
       $day_eng = date('l', $timestamp);
 
-      return eng_to_bn($day_num) . ' ' . $months_bn[$month] . ' ' . eng_to_bn($year) . ' | ' . $days_bn[$day_eng] ;
+      return eng_to_bn($day_num) . ' ' . $months_bn[$month] . ' ' . eng_to_bn($year) . ' | ' . $days_bn[$day_eng];
     }
     ?>
 
@@ -212,10 +213,22 @@ function bn_full_date($date_string) {
 
           </div>
 
-          <button class="btn btn-sm btn-outline-secondary edit-date-btn" data-bs-toggle="modal"
-            data-bs-target="#editDateModal" data-date="<?= date('Y-m-d', strtotime($date)) ?>">
-            ✏️ তারিখ পরিবর্তন
-          </button>
+          <div class="rightEditDelete">
+            <button class="btn btn-sm btn-outline-secondary edit-date-btn" data-bs-toggle="modal"
+              data-bs-target="#editDateModal" data-date="<?= date('Y-m-d', strtotime($date)) ?>">
+              ✏️ তারিখ
+            </button>
+
+            <!-- Delete All Entries of This Date -->
+            <a href="core_file/delete_day_entries.php?date=<?= date('d-m-Y', strtotime($date)) ?>"
+              class="btn btn-sm btn-outline-danger"
+              onclick="return confirm('🔴 আপনি কি নিশ্চিত যে, <?= date('d/m/Y', strtotime($date)) ?> তারিখের সব এন্ট্রি মুছে ফেলতে চান?')">
+              🗑️
+            </a>
+
+
+
+          </div>
         </div>
 
         <div class="card-body">
