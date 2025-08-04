@@ -6,7 +6,7 @@ include("../db/dbcon.php");
 
 // ইউজার লগইন না করলে রিডাইরেক্ট করো
 if (!isset($_SESSION['authenticated'])) {
-    header("Location: login/index2.php");
+    header("Location: ../login/index.php");
     exit();
 }
 
