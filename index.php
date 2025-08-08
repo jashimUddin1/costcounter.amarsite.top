@@ -125,8 +125,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include "includes/session.php"; ?>
   </div>
 
-  <!-- Data Entry Form -->
-  <?php include "index_file/data_entry.php" ?>
+  <!-- ✅ Data Entry Form Selector -->
+  <?php
+  // Default fallback: single entry form
+  if (empty($_SESSION['multi_entry_enabled'])) {
+    include "index_file/data_entry.php"; // 👉 Single Entry Mode
+  }
+  // Multiple Entry Mode
+  else {
+    $entryTypes = $_SESSION['entry_type_select'] ?? [];
+
+    if (in_array('single_date', $entryTypes)) {
+      include "index_file/signle_date_multi_entry.php"; // 👉 Single Date Multiple Entry
+    } elseif (in_array('multi_date', $entryTypes)) {
+      include "index_file/multi_date_multi_entry.php"; // 👉 Multi Date Multiple Entry
+    } else {
+      // fallback if no valid entry_type selected
+      $_SESSION['warning'] = '⚠️ অনুগ্রহ করে Data Entry Options নির্বাচন করুন।';
+    }
+  }
+  ?>
+
+
+  <!-- <pre><?php print_r($_SESSION); ?></pre> -->
+
+  <?php if (!empty($_SESSION['enabled_displayed'])): ?>
+   <!-- ⚙️ Settings Status Info -->
+  <div class="mb-3">
+    <span class="badge bg-info me-2">
+      <?= !empty($_SESSION['edit_enabled']) ? '✏️ Edit Entry On ✅ আছে' : "<span style='color:red'>✏️ Edit Entry Off ❌ আছে</span>" ?>
+    </span>
+
+    <span class="badge bg-info me-2">
+      <?= !empty($_SESSION['edit_date']) ? '✏️ Edit Date On ✅ আছে' : "<span style='color:red'>✏️ Edit Date Off ❌ আছে</span>" ?>
+    </span>
+
+    <span class="badge bg-info me-2">
+      <?= !empty($_SESSION['edit_balance']) ? '✏️ Edit Balance On ✅ আছে' : "<span style='color:red'>✏️ Edit Balance Off ❌ আছে</span>" ?>
+    </span>
+
+    <span class="badge bg-warning me-2">
+      <?= !empty($_SESSION['delete_enabled']) ? '🗑️ Delete Entry On ✅ আছে' : "<span style='color:red'>🗑️ Delete Entry Off ❌ আছে</span>" ?>
+    </span>
+
+    <span class="badge bg-warning me-2">
+      <?= !empty($_SESSION['delete_day']) ? '🗑️ Delete Day On ✅ আছে' : "<span style='color:red'>🗑️ Delete Day Off ❌ আছে</span>" ?>
+    </span>
+
+    <span class="badge bg-success">
+      <?= !empty($_SESSION['multi_entry_enabled']) ? '➕ Multiple Entry ✅ Mode আছে' : '➕ Single Entry Mode আছে' ?>
+    </span>
+  </div>
+
+  <?php endif; ?>
 
   <hr>
 
@@ -152,10 +203,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="d-flex">
         <h4 class="mb-0">অবশিষ্ট <span id="balanceAmount"><?= number_format($balance, 0) ?></span> টাকা</h4>
-        <button class="btn btn-sm btn-outline-secondary edit-btn" data-bs-toggle="modal"
-          data-bs-target="#editBalanceModal" data-id="<?= $balance_id ?? '' ?>" data-value="<?= $balance ?? '' ?>">
-          ✏️
-        </button>
+
+        <?php if (!empty($_SESSION['edit_balance'])): ?>
+          <button class="btn btn-sm btn-outline-secondary edit-btn" data-bs-toggle="modal"
+            data-bs-target="#editBalanceModal" data-id="<?= $balance_id ?? '' ?>" data-value="<?= $balance ?? '' ?>">
+            ✏️
+          </button>
+        <?php endif; ?>
+
       </div>
     </div>
 
@@ -214,19 +269,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
 
           <div class="rightEditDelete">
-            <button class="btn btn-sm btn-outline-secondary edit-date-btn" data-bs-toggle="modal"
-              data-bs-target="#editDateModal" data-date="<?= date('Y-m-d', strtotime($date)) ?>">
-              ✏️ তারিখ
-            </button>
 
-            <!-- Delete All Entries of This Date -->
-            <a href="core_file/delete_day_entries.php?date=<?= date('d-m-Y', strtotime($date)) ?>"
-              class="btn btn-sm btn-outline-danger"
-              onclick="return confirm('🔴 আপনি কি নিশ্চিত যে, <?= date('d/m/Y', strtotime($date)) ?> তারিখের সব এন্ট্রি মুছে ফেলতে চান?')">
-              🗑️
-            </a>
+            <?php if (!empty($_SESSION['edit_date'])): ?>
+              <button class="btn btn-sm btn-outline-secondary edit-date-btn" data-bs-toggle="modal"
+                data-bs-target="#editDateModal" data-date="<?= date('Y-m-d', strtotime($date)) ?>">
+                ✏️ তারিখ
+              </button>
+            <?php endif; ?>
 
-
+            <?php if (!empty($_SESSION['delete_day'])): ?>
+              <!-- Delete All Entries of This Date -->
+              <a href="core_file/delete_day_entries.php?date=<?= date('d-m-Y', strtotime($date)) ?>"
+                class="btn btn-sm btn-outline-danger"
+                onclick="return confirm('🔴 আপনি কি নিশ্চিত যে, <?= date('d/m/Y', strtotime($date)) ?> তারিখের সব এন্ট্রি মুছে ফেলতে চান?')">
+                🗑️
+              </a>
+            <?php endif; ?>
 
           </div>
         </div>
@@ -248,16 +306,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span class="badge bg-primary rounded-pill"><?= eng_to_bn($txn['amount']) ?>৳</span>
 
                 <!-- Edit Button -->
-                <button class="btn btn-sm btn-outline-warning edit-btn" data-id="<?= $txn['id'] ?>"
-                  data-description="<?= htmlspecialchars($txn['description']) ?>" data-amount="<?= $txn['amount'] ?>"
-                  data-category="<?= htmlspecialchars($txn['category']) ?>" data-bs-toggle="modal"
-                  data-bs-target="#editCostDataModal">
-                  ✏️
-                </button>
+                <?php if (!empty($_SESSION['edit_enabled'])): ?>
+                  <button class="btn btn-sm btn-outline-warning edit-btn" data-id="<?= $txn['id'] ?>"
+                    data-description="<?= htmlspecialchars($txn['description']) ?>" data-amount="<?= $txn['amount'] ?>"
+                    data-category="<?= htmlspecialchars($txn['category']) ?>" data-bs-toggle="modal"
+                    data-bs-target="#editCostDataModal">
+                    ✏️
+                  </button>
+                <?php endif; ?>
 
                 <!-- Delete Button -->
-                <a href="core_file/delete_entry.php?id=<?= $txn['id'] ?>" class="btn btn-sm btn-outline-danger"
-                  onclick="return confirm('তুমি কি এই এন্ট্রিটি মুছে ফেলতে চাও?')">🗑️</a>
+                <?php if (!empty($_SESSION['delete_enabled'])): ?>
+                  <a href="core_file/delete_entry.php?id=<?= $txn['id'] ?>" class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('তুমি কি এই এন্ট্রিটি মুছে ফেলতে চাও?')">🗑️</a>
+                <?php endif; ?>
+
               </div>
             </li>
             <?php $i++; endforeach; ?>
