@@ -114,6 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ✅ ফিডব্যাক
     if ($inserted > 0) {
         $_SESSION['success'] = "✅ {$inserted}টি খরচ সফলভাবে যোগ হয়েছে!";
+        header("Location: ../index.php?$redirect_query");
+        exit();
     } else {
         $_SESSION['danger'] = "❌ কোনো খরচ যোগ হয়নি! ফরম্যাট চেক করুন!";
     }
