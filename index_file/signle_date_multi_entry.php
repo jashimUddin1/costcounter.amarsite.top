@@ -1,6 +1,9 @@
 <!-- single_date_multi_entry.php -->
 <div class="">
   <form class="row g-3 mb-4" method="POST" action="core_file/single_date_core.php">
+      <!-- Hidden Query Parameters -->
+    <input type="hidden" name="redirect_query" value="<?= htmlspecialchars($query_string) ?>">
+    
     <div class="col-md-2">
       <label class="form-label">তারিখ দিন</label>
       <input type="date" name="date" required class="form-control" value="<?= date('Y-m-d') ?>">
