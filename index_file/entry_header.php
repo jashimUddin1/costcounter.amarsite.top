@@ -107,7 +107,7 @@
         <div class="form-check">
           <input class="form-check-input" type="checkbox" name="delete_day" id="delete_day"
             <?= !empty($_SESSION['delete_day']) ? 'checked' : '' ?>>
-          <label class="form-check-label" for="delete_day">Delete day</label>
+          <label class="form-check-label" for="delete_day">Delete All Entry in a day</label>
         </div>
       </div>
 

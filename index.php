@@ -350,9 +350,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Edit Date Modal -->
 <?php include "index_file/edit_date_modal.php" ?>
 
-<!-- এডিট মোডাল -->
-<?php include "index_file/edit_entry_modal.php" ?>
-
 <!-- #endregion modal end -->
 
 
