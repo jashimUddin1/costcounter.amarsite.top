@@ -11,7 +11,7 @@ if (!isset($_SESSION['authenticated'])) {
 $user_id = $_SESSION['auth_user']['id'];
 
 $year = $_GET['year'] ?? date('Y');
-$month = $_GET['month'] ?? date('n');
+$month = $_GET['month'] ?? date('F');
 $view = $_GET['view'] ?? 'graph';
 
 $months_bn = ['','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
