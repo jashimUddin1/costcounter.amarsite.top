@@ -150,32 +150,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <!-- <pre><?php print_r($_SESSION); ?></pre> -->
 
   <?php if (!empty($_SESSION['enabled_displayed'])): ?>
-   <!-- ⚙️ Settings Status Info -->
-  <div class="mb-3">
-    <span class="badge bg-info me-2">
-      <?= !empty($_SESSION['edit_enabled']) ? '✏️ Edit Entry On ✅ আছে' : "<span style='color:red'>✏️ Edit Entry Off ❌ আছে</span>" ?>
-    </span>
+    <!-- ⚙️ Settings Status Info -->
+    <div class="mb-3">
+      <span class="badge bg-info me-2">
+        <?= !empty($_SESSION['edit_enabled']) ? '✏️ Edit Entry On ✅ আছে' : "<span style='color:red'>✏️ Edit Entry Off ❌ আছে</span>" ?>
+      </span>
 
-    <span class="badge bg-info me-2">
-      <?= !empty($_SESSION['edit_date']) ? '✏️ Edit Date On ✅ আছে' : "<span style='color:red'>✏️ Edit Date Off ❌ আছে</span>" ?>
-    </span>
+      <span class="badge bg-info me-2">
+        <?= !empty($_SESSION['edit_date']) ? '✏️ Edit Date On ✅ আছে' : "<span style='color:red'>✏️ Edit Date Off ❌ আছে</span>" ?>
+      </span>
 
-    <span class="badge bg-info me-2">
-      <?= !empty($_SESSION['edit_balance']) ? '✏️ Edit Balance On ✅ আছে' : "<span style='color:red'>✏️ Edit Balance Off ❌ আছে</span>" ?>
-    </span>
+      <span class="badge bg-info me-2">
+        <?= !empty($_SESSION['edit_balance']) ? '✏️ Edit Balance On ✅ আছে' : "<span style='color:red'>✏️ Edit Balance Off ❌ আছে</span>" ?>
+      </span>
 
-    <span class="badge bg-warning me-2">
-      <?= !empty($_SESSION['delete_enabled']) ? '🗑️ Delete Entry On ✅ আছে' : "<span style='color:red'>🗑️ Delete Entry Off ❌ আছে</span>" ?>
-    </span>
+      <span class="badge bg-warning me-2">
+        <?= !empty($_SESSION['delete_enabled']) ? '🗑️ Delete Entry On ✅ আছে' : "<span style='color:red'>🗑️ Delete Entry Off ❌ আছে</span>" ?>
+      </span>
 
-    <span class="badge bg-warning me-2">
-      <?= !empty($_SESSION['delete_day']) ? '🗑️ Delete Day On ✅ আছে' : "<span style='color:red'>🗑️ Delete Day Off ❌ আছে</span>" ?>
-    </span>
+      <span class="badge bg-warning me-2">
+        <?= !empty($_SESSION['delete_day']) ? '🗑️ Delete Day On ✅ আছে' : "<span style='color:red'>🗑️ Delete Day Off ❌ আছে</span>" ?>
+      </span>
 
-    <span class="badge bg-success">
-      <?= !empty($_SESSION['multi_entry_enabled']) ? '➕ Multiple Entry ✅ Mode আছে' : '➕ Single Entry Mode আছে' ?>
-    </span>
-  </div>
+      <span class="badge bg-success">
+        <?= !empty($_SESSION['multi_entry_enabled']) ? '➕ Multiple Entry ✅ Mode আছে' : '➕ Single Entry Mode আছে' ?>
+      </span>
+    </div>
 
   <?php endif; ?>
 
@@ -332,9 +332,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 
-    <div class="alert alert-success text-center fs-5">
+    <div class="container rounded-3 alert alert-success text-center fs-5 fixed-bottom mb-0" style="border-radius: 0;">
       ✅ মোট ব্যয়: <strong><?= $total_monthly_cost ?> টাকা</strong>
     </div>
+
   </div>
 
 </div>

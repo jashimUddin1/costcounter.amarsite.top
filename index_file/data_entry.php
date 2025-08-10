@@ -36,6 +36,7 @@
           
           <optgroup label="বাড়ি সংক্রান্ত">
             <option value="বাসাভাড়া">বাসা ভাড়া</option>
+            <option value="বিল">বিল</option>
             <option value="গৃহস্থালীজিনিসপত্র">গৃহস্থালী জিনিসপত্র</option>
             <option value="গৃহস্থালীমেরামত">গৃহস্থালী মেরামত</option>
           </optgroup>

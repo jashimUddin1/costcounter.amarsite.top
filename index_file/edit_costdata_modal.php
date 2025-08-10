@@ -41,6 +41,7 @@
 
               <optgroup label="বাড়ি সংক্রান্ত">
                 <option value="বাসাভাড়া">বাসা ভাড়া</option>
+                <option value="বিল">বিল</option>
                 <option value="গৃহস্থালীজিনিসপত্র">গৃহস্থালী জিনিসপত্র</option>
                 <option value="গৃহস্থালীমেরামত">গৃহস্থালী মেরামত</option>
               </optgroup>
@@ -56,8 +57,8 @@
               </optgroup>
 
               <optgroup label="আর্থিক">
-                <option value="প্রাপ্তি">প্রাপ্তি</option>
-                <option value="প্রদান">প্রদান</option>
+                <option value="প্রাপ্তি">প্রাপ্তি</option> 
+                <option value="প্রদান">প্রদান</option> 
                 <option value="আয়">আয়</option>
               </optgroup>
 
