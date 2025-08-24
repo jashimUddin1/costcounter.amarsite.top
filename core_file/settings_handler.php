@@ -1,4 +1,4 @@
-<?php
+<?php //settings_handler.php
 session_start();
 
 // ✅ Edit toggle
@@ -20,6 +20,11 @@ if ($_SESSION['multi_entry_enabled']) {
 } else {
     unset($_SESSION['entry_type_select']);
 }
+
+// ✅ Category toggle
+$_SESSION['category_enabled'] = isset($_POST['category_enabled']);
+$_SESSION['category_edit'] = isset($_POST['category_edit']);
+$_SESSION['category_delete'] = isset($_POST['category_delete']);
 
 //display setting 
 $_SESSION['enabled_displayed'] = isset($_POST['enabled_displayed']);

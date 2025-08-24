@@ -7,14 +7,18 @@
 
   .entry-header select,
   .selectionMenu button,
-  .selectionMenu a,
+  .selectionMenu a {
+    font-size: 11px !important;
+  }
+
   .monthly-cost-header select,
   .monthly-cost-header button,
   .monthly-cost-header h4,
   .monthly-cost-header span {
-    font-size: 11px !important;
+    font-size: 12px !important;
   }
 
+  
   .entry-header .badge,
   .monthly-cost-header .badge {
     font-size: 11px !important;

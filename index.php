@@ -1,114 +1,4 @@
-<!-- #region start block php code-->
-<?php
-session_start();
-include("db/dbcon.php");
-
-// ইউজার লগইন চেক
-if (!isset($_SESSION['authenticated'])) {
-  header("location: login/index.php");
-  exit();
-}
-
-$user_id = $_SESSION['auth_user']['id'];
-$query_string = $_SERVER['QUERY_STRING'];
-$current_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
-$current_month = isset($_GET['month']) ? $_GET['month'] : date('F');
-
-// 🔢 বছরের তালিকা আনো
-$yearQuery = "SELECT DISTINCT YEAR(date) as year FROM cost_data WHERE user_id = ? ORDER BY year DESC";
-$stmtYear = $con->prepare($yearQuery);
-$stmtYear->bind_param("i", $user_id);
-$stmtYear->execute();
-$yearResult = $stmtYear->get_result();
-$years = [];
-while ($row = $yearResult->fetch_assoc()) {
-  $years[] = $row['year'];
-}
-$stmtYear->close();
-
-// 📆 মাসের তালিকা আনো
-$monthQuery = "SELECT DISTINCT MONTH(date) as month_number, MONTHNAME(date) as month_name FROM cost_data WHERE user_id = ? AND YEAR(date) = ? ORDER BY month_number ASC";
-$stmtMonth = $con->prepare($monthQuery);
-$stmtMonth->bind_param("ii", $user_id, $current_year);
-$stmtMonth->execute();
-$monthResult = $stmtMonth->get_result();
-$months = [];
-while ($row = $monthResult->fetch_assoc()) {
-  $months[] = $row['month_name'];
-}
-$stmtMonth->close();
-
-// 📋 ট্রান্সেকশন ডাটা আনো
-$transQuery = "SELECT * FROM cost_data WHERE user_id = ? AND YEAR(date) = ? AND MONTHNAME(date) = ? ORDER BY date ASC";
-$stmtTrans = $con->prepare($transQuery);
-$stmtTrans->bind_param("iis", $user_id, $current_year, $current_month);
-$stmtTrans->execute();
-$transResult = $stmtTrans->get_result();
-
-// 🔢 ব্যালেন্স আনো (settings টেবিল থেকে)
-$balance = 0;
-$setting_query = "SELECT * FROM settings WHERE `key` = 'balance' LIMIT 1";
-$setting_result = mysqli_query($con, $setting_query);
-if ($setting_result && mysqli_num_rows($setting_result) > 0) {
-  $row = mysqli_fetch_assoc($setting_result);
-  $balance = intval($row['value']); // ✅ দশমিক ছাড়া দেখানোর জন্য intval
-}
-
-// 💰 মাসিক ব্যালেন্স (যদি আলাদা থাকে)
-$monthly_balance = 0;
-$balanceQuery = "SELECT amount FROM cost_data WHERE user_id = ? AND year = ? AND month = ?";
-$stmtBalance = $con->prepare($balanceQuery);
-$stmtBalance->bind_param("iis", $user_id, $current_year, $current_month);
-$stmtBalance->execute();
-$balanceResult = $stmtBalance->get_result();
-if ($row = $balanceResult->fetch_assoc()) {
-  $monthly_balance = $row['amount'];
-}
-$stmtBalance->close();
-
-// 🔄 ডেট অনুযায়ী ট্রান্সেকশন গ্রুপ করো
-$total_monthly_cost = 0;
-$grouped_data = [];
-$excluded_categories = ['প্রাপ্তি', 'প্রদান', 'আয়'];
-
-while ($row = $transResult->fetch_assoc()) {
-  $date = date('d-m-Y', strtotime($row['date']));
-  $grouped_data[$date][] = $row;
-
-  if (!in_array($row['category'], $excluded_categories)) {
-    $total_monthly_cost += $row['amount'];
-  }
-}
-
-$sort_order = $_GET['sort'] ?? 'asc'; // default DESC
-
-if ($sort_order === 'asc') {
-  ksort($grouped_data); // পুরাতন আগে
-} else {
-  krsort($grouped_data); // নতুন আগে
-}
-
-
-// ✅ ফর্ম সাবমিট করলে নতুন ডাটা ইনসার্ট করো
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $date = $_POST['date'];
-  $description = $_POST['description'];
-  $amount = floatval($_POST['amount']);
-  $category = $_POST['category'];
-
-  $insertQuery = "INSERT INTO cost_data (user_id, date, description, amount, category) VALUES (?, ?, ?, ?, ?)";
-  $stmtInsert = $con->prepare($insertQuery);
-  $stmtInsert->bind_param("issds", $user_id, $date, $description, $amount, $category);
-  $stmtInsert->execute();
-  $stmtInsert->close();
-
-  header("Location: index.php?year={$current_year}&month={$current_month}");
-  exit();
-}
-//
-?>
-<!-- #endregion php code end-->
-
+<?php include "core_file/index_core.php" ?>
 
 <?php include "index_file/header.php" ?>
 
@@ -152,15 +42,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php if (!empty($_SESSION['enabled_displayed'])): ?>
     <!-- ⚙️ Settings Status Info -->
     <div class="mb-3">
-      <span class="badge bg-info me-2">
+
+      <span class="badge bg-warning me-2">
         <?= !empty($_SESSION['edit_enabled']) ? '✏️ Edit Entry On ✅ আছে' : "<span style='color:red'>✏️ Edit Entry Off ❌ আছে</span>" ?>
       </span>
 
-      <span class="badge bg-info me-2">
+      <span class="badge bg-warning me-2">
         <?= !empty($_SESSION['edit_date']) ? '✏️ Edit Date On ✅ আছে' : "<span style='color:red'>✏️ Edit Date Off ❌ আছে</span>" ?>
       </span>
 
-      <span class="badge bg-info me-2">
+      <span class="badge bg-warning me-2">
         <?= !empty($_SESSION['edit_balance']) ? '✏️ Edit Balance On ✅ আছে' : "<span style='color:red'>✏️ Edit Balance Off ❌ আছে</span>" ?>
       </span>
 
@@ -172,11 +63,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?= !empty($_SESSION['delete_day']) ? '🗑️ Delete Day On ✅ আছে' : "<span style='color:red'>🗑️ Delete Day Off ❌ আছে</span>" ?>
       </span>
 
-      <span class="badge bg-success">
-        <?= !empty($_SESSION['multi_entry_enabled']) ? '➕ Multiple Entry ✅ Mode আছে' : '➕ Single Entry Mode আছে' ?>
+      <span class="badge bg-warning me-2">
+        <?= !empty($_SESSION['multi_entry_enabled']) ? "<span style='color:red'>➕ Multiple Entry Mode ✅ আছে </span>" : "<span style='color:white'> Single Entry Mode ✅ আছে</span>" ?>
       </span>
-    </div>
 
+      <span class="badge bg-warning me-2">
+        <?= !empty($_SESSION['category_enabled']) ? '📂 Category Enable ✅ আছে' : "<span style='color:red'>📂 Category Mode Off ❌ আছে</span>" ?>
+      </span>
+
+      <span class="badge bg-warning me-2">
+        <?= !empty($_SESSION['category_edit']) ? '📂 Category Edit ✅ আছে' : "<span style='color:red'>📂 Category Edit Mode Off ❌ আছে</span>" ?>
+      </span>
+
+      <span class="badge bg-warning me-2">
+        <?= !empty($_SESSION['category_delete']) ? '📂 Category Delete Enable ✅ আছে' : "<span style='color:red'>📂 Category Delete Mode Off ❌ আছে</span>" ?>
+      </span>
+
+    </div>
   <?php endif; ?>
 
   <hr>
@@ -185,7 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <hr>
 
-  <!-- 👇 মাসিক খরচ শুরু -->
+
+
+  <!-- 👇 মাসিক খরচ -->
   <div class="costDetails">
     <div class="d-flex justify-content-between align-items-center mb-3 mt-3 monthly-cost-header">
       <h4 class="mb-0">🗓️ মাসের খরচ</h4>
@@ -299,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } ?>
             <li class="list-group-item d-flex justify-content-between align-items-center">
               <div>
-                <?= eng_to_bn($i) ?>. <?= $txn['description'] ?>     <?= eng_to_bn($txn['amount']) ?> টাকা
+                <?= eng_to_bn($i) ?>. <?= eng_to_bn($txn['description']) ?>     <?= eng_to_bn($txn['amount']) ?> টাকা
                 (<?= $txn['category'] ?>)
               </div>
               <div class="d-flex align-items-center gap-2">
@@ -330,10 +235,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endforeach; ?>
 
+    <div class="mb-5 mt-5">
+      <hr>
+    </div>
 
-
-    <div class="container rounded-3 alert alert-success text-center fs-5 fixed-bottom mb-0" style="border-radius: 0;">
-      ✅ মোট ব্যয়: <strong><?= $total_monthly_cost ?> টাকা</strong>
+    <div class="container rounded-3 alert alert-success text-center fs-5 fixed-bottom mb-0">
+      ✅ মোট ব্যয়: <strong><?= eng_to_bn($total_monthly_cost) ?> টাকা</strong>
     </div>
 
   </div>
@@ -383,4 +290,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   });
 </script>
 
-<?php include('includes/footer.php'); ?>
+<?php include 'includes/footer.php'; ?>

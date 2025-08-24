@@ -111,6 +111,37 @@
         </div>
       </div>
 
+
+      <!-- 📂 Category Options -->
+      <div class="mb-4">
+        <h6>📂 Category Options</h6>
+
+        <!-- ✅ Enable Category Selection -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="category_enabled" id="categoryEnabled"
+            <?= !empty($_SESSION['category_enabled']) ? 'checked' : '' ?>>
+          <label class="form-check-label" for="categoryEnabled">Enable Category Selection</label>
+        </div>
+
+        <!-- 🔽 Extra options (edit/delete) only visible if enabled -->
+        <div id="categoryExtraOptions" style="<?= empty($_SESSION['category_enabled']) ? 'display:none;' : '' ?>">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="category_edit" id="categoryEdit"
+              <?= !empty($_SESSION['category_edit']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="categoryEdit">Allow Category Editing</label>
+          </div>
+
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="category_delete" id="categoryDelete"
+              <?= !empty($_SESSION['category_delete']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="categoryDelete">Allow Category Delete</label>
+          </div>
+        </div>
+      </div>
+
+
+
+
       <div class="mb-4">
         <h6>⚙️ সেটিংস স্ট্যাটাস প্রদর্শন</h6>
         <div class="form-check">
@@ -128,10 +159,36 @@
 
 <!-- 🔁 JavaScript to toggle multi options & enforce required -->
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const singleRadio = document.getElementById("singleEntry");
-    const multiRadio = document.getElementById("multiEntry");
-    const multiOptions = document.getElementById("multiEntryOptions");
+document.addEventListener("DOMContentLoaded", function () {
+  /* ==============================
+     🔹 Category Options Toggle
+  ============================== */
+  const categoryEnabled = document.getElementById("categoryEnabled");
+  const categoryExtraOptions = document.getElementById("categoryExtraOptions");
+
+  function toggleCategoryOptions() {
+    if (categoryEnabled && categoryExtraOptions) {
+      if (categoryEnabled.checked) {
+        categoryExtraOptions.style.display = "block";
+      } else {
+        categoryExtraOptions.style.display = "none";
+      }
+    }
+  }
+
+  if (categoryEnabled) {
+    toggleCategoryOptions();
+    categoryEnabled.addEventListener("change", toggleCategoryOptions);
+  }
+
+  /* ==============================
+     🔹 Entry Mode Toggle
+  ============================== */
+  const singleRadio = document.getElementById("singleEntry");
+  const multiRadio = document.getElementById("multiEntry");
+  const multiOptions = document.getElementById("multiEntryOptions");
+
+  if (singleRadio && multiRadio && multiOptions) {
     const entryTypeRadios = multiOptions.querySelectorAll('input[name="entry_type_select[]"]');
 
     function toggleMultiOptions() {
@@ -146,11 +203,12 @@
       });
     }
 
-    // Add event listeners
-    singleRadio.addEventListener("change", toggleMultiOptions);
-    multiRadio.addEventListener("change", toggleMultiOptions);
-
     // Initial setup
     toggleMultiOptions();
-  });
+
+    // Event listeners
+    singleRadio.addEventListener("change", toggleMultiOptions);
+    multiRadio.addEventListener("change", toggleMultiOptions);
+  }
+});
 </script>
