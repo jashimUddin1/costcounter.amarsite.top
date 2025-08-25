@@ -62,42 +62,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 
-    // // 🔸 ক্যাটাগরি খোঁজার ফাংশন --> old
-    // function detectCategory($description, $category_map)
-    // {
-    //     $desc_lower = mb_strtolower($description);
-    //     foreach ($category_map as $category => $keywords) {
-    //         foreach ($keywords as $keyword) {
-    //             if (mb_strpos($desc_lower, mb_strtolower($keyword)) !== false) {
-    //                 return $category;
-    //             }
-    //         }
-    //     }
-    //     return 'অন্যান্য';
-    // }
-
-
-
+    // 🔸 ক্যাটাগরি খোঁজার ফাংশন --> old
     function detectCategory($description, $category_map)
     {
-        $desc_lower = mb_strtolower(trim($description));
-
+        $desc_lower = mb_strtolower($description);
         foreach ($category_map as $category => $keywords) {
             foreach ($keywords as $keyword) {
-                $kw = mb_strtolower(trim($keyword));
-
-                if ($kw === '')
-                    continue; // ফাঁকা বাদ
-
-                // শব্দ ম্যাচ (পুরো শব্দ মিলবে, আংশিক নয়)
-                if (preg_match('/\b' . preg_quote($kw, '/') . '\b/u', $desc_lower)) {
+                if (mb_strpos($desc_lower, mb_strtolower($keyword)) !== false) {
                     return $category;
                 }
             }
         }
-
         return 'অন্যান্য';
     }
+
+
+
+    // function detectCategory($description, $category_map)
+    // {
+    //     $desc_lower = mb_strtolower(trim($description));
+
+    //     foreach ($category_map as $category => $keywords) {
+    //         foreach ($keywords as $keyword) {
+    //             $kw = mb_strtolower(trim($keyword));
+
+    //             if ($kw === '')
+    //                 continue; // ফাঁকা বাদ
+
+    //             // শব্দ ম্যাচ (পুরো শব্দ মিলবে, আংশিক নয়)
+    //             if (preg_match('/\b' . preg_quote($kw, '/') . '\b/u', $desc_lower)) {
+    //                 return $category;
+    //             }
+    //         }
+    //     }
+
+    //     return 'অন্যান্য';
+    // }
 
 
     $entries = explode(',', $bulk_description);
