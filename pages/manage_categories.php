@@ -1,7 +1,36 @@
+
+
 <!-- pages/manage_categories.php -->
 <?php
 include '../core_file/categore_core.php';
+
+// সব গ্রুপের ক্যাটাগরি নাম একত্র করা
+$grouped_cats = [];
+foreach ($category_groups as $group_cats) {
+    $cats = array_map('trim', explode(',', $group_cats['group_category']));
+    $grouped_cats = array_merge($grouped_cats, $cats);
+}
+$grouped_cats = array_map('strtolower', $grouped_cats); // case insensitive match
+
+// যেসব ক্যাটাগরি কোনো গ্রুপে নাই, সেগুলো $uncategorized এ রাখি
+$uncategorized = [];
+foreach ($categories as $cat_name => $cat_data) {
+    if (!in_array(strtolower($cat_name), $grouped_cats)) {
+        $uncategorized[] = $cat_name;
+    }
+}
+
+$query_string = $_SERVER['HTTP_REFERER'] ?? '';
+$redirect_url = "../index.php";
+
+if (!empty($query_string)) {
+    $parsed_url = parse_url($query_string);
+    if (isset($parsed_url['query'])) {
+        $redirect_url .= '?' . $parsed_url['query'];
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="bn">
 
@@ -20,7 +49,7 @@ include '../core_file/categore_core.php';
 
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <a href="../index.php" class="btn btn-secondary mb-2 mb-sm-0">Home</a>
+        <a href="<?= $redirect_url ?>" class="btn btn-secondary mb-2 mb-sm-0">Home</a>
         <h3 class="m-0 text-center flex-grow-1">ক্যাটাগরি ম্যানেজমেন্ট</h3>
         <div class="ms-auto">
             <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addSingleModal">
@@ -68,7 +97,7 @@ include '../core_file/categore_core.php';
                             if ($cats === '') {
                                 echo "<span class='text-white bg-dark p-1 rounded'>কোনো কীওয়ার্ড নাই</span>";
                             } else {
-                                echo  htmlspecialchars($cats);
+                                echo htmlspecialchars($cats);
                             }
                             ?>
                         </td>
@@ -127,6 +156,7 @@ include '../core_file/categore_core.php';
                                 <form method="post">
                                     <input type="hidden" name="action" value="delete_category">
                                     <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                                    <input type="hidden" name="cat_name" value="<?= $cat_name ?>">
                                     <div class="modal-body text-center">
                                         <p>আপনি কি নিশ্চিত যে এই ক্যাটাগরিটি ডিলিট করতে চান?</p>
                                         <strong><?= htmlspecialchars($cat_name) ?></strong>
@@ -305,6 +335,7 @@ include '../core_file/categore_core.php';
                     </tr>
                 </thead>
                 <tbody>
+                    <?php if(!empty($uncategorized)):  ?>
                     <tr>
                         <td>#</td>
                         <td class="text-start ">
@@ -341,6 +372,8 @@ include '../core_file/categore_core.php';
                             </td>
                         <?php endif; ?>
                     </tr>
+                    <?php endif ?>
+
                     <?php foreach ($category_groups as $group_row): ?>
 
                         <tr>
@@ -495,28 +528,8 @@ include '../core_file/categore_core.php';
     </div>
     <!-- category_groups end -->
 
-    <?php
-    // সব গ্রুপের ক্যাটাগরি নাম একত্র করা
-    $grouped_cats = [];
-    foreach ($category_groups as $group_cats) {
-        $cats = array_map('trim', explode(',', $group_cats['group_category']));
-        $grouped_cats = array_merge($grouped_cats, $cats);
-    }
-    $grouped_cats = array_map('strtolower', $grouped_cats); // case insensitive match
-    
-    // যেসব ক্যাটাগরি কোনো গ্রুপে নাই, সেগুলো $uncategorized এ রাখি
-    $uncategorized = [];
-    foreach ($categories as $cat_name => $cat_data) {
-        if (!in_array(strtolower($cat_name), $grouped_cats)) {
-            $uncategorized[] = $cat_name;
-        }
-    }
 
-
-    ?>
-
-
-    <!--Change Modal -->
+    <!--Change  Modal -->
     <div class="modal fade" id="assignGroupModal" tabindex="-1" aria-labelledby="assignGroupModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -558,14 +571,19 @@ include '../core_file/categore_core.php';
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বন্ধ করুন</button>
-                        <button type="submit" name="assign_category" class="btn btn-primary">সেভ করুন</button>
+                        <?php if (!empty($uncategorized)): ?>
+                            <!-- Active Submit Button -->
+                            <button type="submit" name="assign_category" class="btn btn-primary">সেভ করুন</button>
+                        <?php else: ?>
+                            <!-- Disabled Button -->
+                            <button type="button" class="btn btn-secondary" disabled>সেভ করুন</button>
+                        <?php endif; ?>
                     </div>
+
                 </form>
             </div>
         </div>
     </div>
-
-
 
 
     <!-- Scripts -->

@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['success'] = "নতুন ক্যাটাগরি <strong>$name</strong> যোগ হয়েছে।";
             }
         } else {
-            $_SESSION['warning'] = "ক্যাটাগরি নাম খালি রাখা যাবে না।";
+            $_SESSION['warning'] = "ক্যাটাগরির নাম দেওয়া হয় নাই";
         }
         header("Location: manage_categories.php");
         exit();
@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // --- Delete category ---
     if ($action === 'delete_category') {
         $id = intval($_POST['id'] ?? 0);
-        $category_name = $_POST['category_name'];
+        $category_name = $_POST['cat_name'];
         if ($id) {
             $stmt = $con->prepare("DELETE FROM categories WHERE id = ? AND user_id = ?");
             $stmt->bind_param("ii", $id, $user_id);
@@ -203,8 +203,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: manage_categories.php");
         exit();
     }
-
-
 
 
 
@@ -256,47 +254,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
 
-            // পরিবর্তন ট্র্যাক
-            $changes = [];
 
-            if ($old_data['id'] != $new_id) {
-                $changes[] = "ক্রমিক: " . en2bn($old_data['id']) . " ➝ " . en2bn($new_id);
-            }
+            // --- পরিবর্তন ট্র্যাক ---
+            $added_cats = [];
+            $removed_cats = [];
 
-            if ($old_data['group_name'] != $group_name) {
-                $changes[] = "গ্রুপ নাম: " . htmlspecialchars($old_data['group_name']) . " ➝ " . htmlspecialchars($group_name);
-            }
+            $old_cats = array_filter(array_map('trim', explode(',', $old_data['group_category'])));
+            $new_cats = array_filter(array_map('trim', explode(',', $group_category)));
 
-            if ($old_data['group_category'] != $group_category) {
-                if (!empty(trim($group_category))) {
-                    $old_cats = array_map('trim', explode(',', $old_data['group_category']));
-                    $new_cats = array_map('trim', explode(',', $group_category));
+            $added_cats = array_diff($new_cats, $old_cats);
+            $removed_cats = array_diff($old_cats, $new_cats);
 
-                    $removed = array_diff($old_cats, $new_cats);
-                    $added = array_diff($new_cats, $old_cats);
+            // --- Session message তৈরি ---
+            $group_name_html = "<strong>{$old_data['group_name']}</strong>";
+            $added_html = !empty($added_cats) ? "<strong>" . implode(', ', $added_cats) . "</strong>" : '';
+            $removed_html = !empty($removed_cats) ? "<strong>" . implode(', ', $removed_cats) . "</strong>" : '';
 
-                    $cat_changes = [];
-
-                    if (!empty($added)) {
-                        $cat_changes[] = "যোগ করা হয়েছে: " . implode(', ', $added);
-                    }
-                    if (!empty($removed)) {
-                        $cat_changes[] = "বাদ দেওয়া হয়েছে: " . implode(', ', $removed);
-                    }
-
-                    if (!empty($cat_changes)) {
-                        $changes[] = "ক্যাটাগরি " . implode(' এবং ', $cat_changes);
-                    }
-                } else {
-                    $changes[] = "ক্যাটাগরি সব মুছে ফেলা হয়েছে ❌";
-                }
-
-            }
-            if (!empty($changes)) {
-                $_SESSION['success'] = "{$old_data['group_name']} গ্রুপ আপডেট হয়েছে ✅<br>" . implode("<br>", $changes);
+            if (!empty($added_cats) && !empty($removed_cats)) {
+                $_SESSION['success'] = "{$group_name_html} গ্রুপে {$added_html} যোগ করা হয়েছে এবং {$removed_html} বাদ দেওয়া হয়েছে";
+            } elseif (!empty($added_cats)) {
+                $_SESSION['success'] = "{$group_name_html} গ্রুপে {$added_html} যোগ করা হয়েছে";
+            } elseif (!empty($removed_cats)) {
+                $_SESSION['success'] = "{$group_name_html} গ্রুপ থেকে {$removed_html} বাদ দেওয়া হয়েছে";
             } else {
-                $_SESSION['warning'] = "{$group_name} গ্রুপে কোনো পরিবর্তন হয়নি।";
+                $_SESSION['success'] = "{$group_name_html} গ্রুপে কোনো পরিবর্তন হয়নি";
             }
+
 
         } else {
             $_SESSION['danger'] = "গ্রুপ আপডেট করা সম্ভব হয়নি ❌";

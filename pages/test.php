@@ -34,7 +34,7 @@ while ($row = $res->fetch_assoc()) {
 }
 $stmt->close();
 ?>
-
+<div class="container">
 <div class="col-md-2">
       <label class="form-label">নির্বাচন করুন</label>
       <select name="category" class="form-select" required>
@@ -85,12 +85,14 @@ while ($row = $res->fetch_assoc()) {
   $categories[$row['category_name']] = $row;
 }
 $stmt->close();
+
+include '../includes/header.php';
 ?>
 
 <?php foreach ($categories as $cat_name => $row): ?>
   <tr>
     <td class="text-start word-wrap">
-      <?= "'" . htmlspecialchars($cat_name) . "'" . " => " ?>
+      <?= htmlspecialchars($cat_name) . " => " ?>
     </td>
     <td class="text-start word-wrap">
       <?php
@@ -102,9 +104,9 @@ $stmt->close();
         $keywords = array_map('trim', explode(',', $cats));
         $formatted = [];
         foreach ($keywords as $kw) {
-          $formatted[] = "'" . htmlspecialchars($kw) . "'";
+          $formatted[] =  htmlspecialchars($kw);
         }
-        echo "[ " . implode(", ", $formatted) . " ]<br>";
+        echo  implode(", ", $formatted) ."<br>";
       }
       ?>
     </td>
@@ -134,7 +136,9 @@ while ($row = $res->fetch_assoc()) {
 $stmt->close();
 
 // শুধু টেস্ট করার জন্য প্রিন্ট করো
-echo "<pre>";
+echo "<hr><pre>";
 print_r($category_map);
 echo "</pre>";
+"</div>";
+include '../includes/footer.php';
 ?>

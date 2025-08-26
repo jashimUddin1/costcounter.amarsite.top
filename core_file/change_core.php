@@ -1,5 +1,5 @@
 <?php  //change_core.php
-session_start(); 
+session_start();
 include("../db/dbcon.php");
 
 if (!isset($_SESSION['authenticated'])) {
@@ -19,10 +19,10 @@ if (isset($_POST['assign_category'])) {
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
 
-        $group_name   = $result['group_name'] ?? '';
-        
-        $existing_cats = !empty($result['group_category']) 
-            ? array_map('trim', explode(',', $result['group_category'])) 
+        $group_name = $result['group_name'] ?? '';
+
+        $existing_cats = !empty($result['group_category'])
+            ? array_map('trim', explode(',', $result['group_category']))
             : [];
 
         // নতুন ক্যাটাগরি যোগ করা
@@ -35,12 +35,17 @@ if (isset($_POST['assign_category'])) {
         $stmt->execute();
         $stmt->close();
 
-        $_SESSION['success'] = "ক্যাটাগরি সফলভাবে <strong>$group_name</strong> গ্রুপে যুক্ত হয়েছে ✅";
-        
+        $cats_text = $selected_cats;
+        $last = array_pop($cats_text);
+        $cats_str = $cats_text ? implode(", ", array_map('htmlspecialchars', $cats_text)) . " এবং " . htmlspecialchars($last) : htmlspecialchars($last);
+
+        $_SESSION['success'] = "<strong>$cats_str</strong> ক্যাটাগরি সফলভাবে <strong>$group_name</strong> গ্রুপে যুক্ত হয়েছে ✅";
+
+
         // redirect করতে হবে
         header("Location: ../pages/manage_categories.php");
         exit();
-         
+
     }
 }
 
