@@ -89,11 +89,11 @@
       <label class="form-label">তারিখ দিন</label>
       <input type="date" name="entries[${dateIndex}][date]" class="form-control" required value="<?= date('Y-m-d') ?>">
     </div>
-    <div class="col-md-9">
+    <div class="col-md-8">
       <label class="form-label">বিবরণ ও পরিমাণ (কমা দিয়ে দিন)</label>
       <input type="text" name="entries[${dateIndex}][bulk_description]" class="form-control" placeholder="যেমন: খাবার 50, ফল 530" required>
     </div>
-    <div class="col-md-1 text-center">
+    <div class="col-md-2 text-center">
       <lebel class="form-label">বাদ দিন</lebel>
       <button type="button" class="btn btn-danger remove-date-entry mt-2">✖</button>
     </div>`;
