@@ -1,3 +1,48 @@
+<?php
+function eng_to_bn($str)
+{
+  $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return str_replace($eng, $bn, $str);
+}
+
+function bn_full_date($date_string)
+{
+  $months_bn = [
+    'January' => 'জানুয়ারি',
+    'February' => 'ফেব্রুয়ারি',
+    'March' => 'মার্চ',
+    'April' => 'এপ্রিল',
+    'May' => 'মে',
+    'June' => 'জুন',
+    'July' => 'জুলাই',
+    'August' => 'আগস্ট',
+    'September' => 'সেপ্টেম্বর',
+    'October' => 'অক্টোবর',
+    'November' => 'নভেম্বর',
+    'December' => 'ডিসেম্বর'
+  ];
+
+  $days_bn = [
+    'Saturday' => 'শনিবার',
+    'Sunday' => 'রবিবার',
+    'Monday' => 'সোমবার',
+    'Tuesday' => 'মঙ্গলবার',
+    'Wednesday' => 'বুধবার',
+    'Thursday' => 'বৃহস্পতিবার',
+    'Friday' => 'শুক্রবার'
+  ];
+
+  $timestamp = strtotime($date_string);
+  $day_num = date('j', $timestamp); // 1-31 without leading zero
+  $month = date('F', $timestamp); // Full month name
+  $year = date('Y', $timestamp);
+  $day_eng = date('l', $timestamp);
+
+  return eng_to_bn($day_num) . ' ' . $months_bn[$month] . ' ' . eng_to_bn($year) . ' | ' . $days_bn[$day_eng];
+}
+?>
+
 <?php include "core_file/index_core.php" ?>
 
 <?php include "index_file/header.php" ?>
@@ -35,9 +80,6 @@
     }
   }
   ?>
-
-
-  <!-- <pre><?php print_r($_SESSION); ?></pre> -->
 
   <?php if (!empty($_SESSION['enabled_displayed'])): ?>
     <!-- ⚙️ Settings Status Info -->
@@ -119,51 +161,6 @@
       </div>
     </div>
 
-    <?php
-    function eng_to_bn($str)
-    {
-      $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-      $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-      return str_replace($eng, $bn, $str);
-    }
-
-    function bn_full_date($date_string)
-    {
-      $months_bn = [
-        'January' => 'জানুয়ারি',
-        'February' => 'ফেব্রুয়ারি',
-        'March' => 'মার্চ',
-        'April' => 'এপ্রিল',
-        'May' => 'মে',
-        'June' => 'জুন',
-        'July' => 'জুলাই',
-        'August' => 'আগস্ট',
-        'September' => 'সেপ্টেম্বর',
-        'October' => 'অক্টোবর',
-        'November' => 'নভেম্বর',
-        'December' => 'ডিসেম্বর'
-      ];
-
-      $days_bn = [
-        'Saturday' => 'শনিবার',
-        'Sunday' => 'রবিবার',
-        'Monday' => 'সোমবার',
-        'Tuesday' => 'মঙ্গলবার',
-        'Wednesday' => 'বুধবার',
-        'Thursday' => 'বৃহস্পতিবার',
-        'Friday' => 'শুক্রবার'
-      ];
-
-      $timestamp = strtotime($date_string);
-      $day_num = date('j', $timestamp); // 1-31 without leading zero
-      $month = date('F', $timestamp); // Full month name
-      $year = date('Y', $timestamp);
-      $day_eng = date('l', $timestamp);
-
-      return eng_to_bn($day_num) . ' ' . $months_bn[$month] . ' ' . eng_to_bn($year) . ' | ' . $days_bn[$day_eng];
-    }
-    ?>
-
 
     <?php foreach ($grouped_data as $date => $records): ?>
       <div class="card mb-3">
@@ -212,12 +209,17 @@
 
                 <!-- Edit Button -->
                 <?php if (!empty($_SESSION['edit_enabled'])): ?>
-                  <button class="btn btn-sm btn-outline-warning edit-btn" data-id="<?= $txn['id'] ?>"
-                    data-description="<?= htmlspecialchars($txn['description']) ?>" data-amount="<?= $txn['amount'] ?>"
-                    data-category="<?= htmlspecialchars($txn['category']) ?>" data-bs-toggle="modal"
-                    data-bs-target="#editCostDataModal">
-                    ✏️
+                  <button class="btn btn-sm btn-outline-warning edit-btn"
+                      data-id="<?= $txn['id'] ?>"
+                      data-date="<?= date('Y-m-d', strtotime($txn['date'])) ?>"
+                      data-description="<?= htmlspecialchars($txn['description']) ?>"
+                      data-amount="<?= $txn['amount'] ?>"
+                      data-category="<?= htmlspecialchars($txn['category']) ?>"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editCostDataModal">
+                      ✏️
                   </button>
+
                 <?php endif; ?>
 
                 <!-- Delete Button -->

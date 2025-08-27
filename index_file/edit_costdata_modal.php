@@ -13,7 +13,7 @@
 
           <div class="mb-3">
             <label for="edit-date" class="form-label">তারিখ</label>
-            <input type="date" class="form-control" name="date" id="edit-date" required value="<?= $txn['date'] ?>">
+            <input type="date" class="form-control" name="date" id="edit-date" required>
           </div>
 
           <div class="mb-3">
@@ -27,43 +27,39 @@
           </div>
 
           <div class="mb-3">
-            <label for="edit-category" class="form-label">ক্যাটাগরি</label>
+            <label class="form-label">নির্বাচন করুন</label>
             <select name="category" id="edit-category" class="form-select" required>
 
-              <optgroup label="দৈনন্দিন খরচ">
-                <option value="বাজার">বাজার</option>
-                <option value="বাহিরেরখরচ">বাহিরের খরচ</option>
-                <option value="মোবাইলখরচ">মোবাইল খরচ</option>
-                <option value="গাড়িভাড়া">গাড়ি ভাড়া</option>
-                <option value="ঘোরাঘুরি">ঘোরাঘুরি</option>
-                <option value="কেনাকাটা">কেনাকাটা</option>
-              </optgroup>
+              <option value="" disabled selected>ক্যাটাগরি দিন</option>
+              <?php
+              foreach ($category_groups as $group_name => $cats) {
+                if (!empty($cats)) {
+                  echo "<optgroup label='" . htmlspecialchars($group_name, ENT_QUOTES) . "'>";
+                  foreach ($cats as $cat) {
+                    if (isset($categories[$cat])) {
+                      echo "<option value='" . htmlspecialchars($cat, ENT_QUOTES) . "'>" . htmlspecialchars($cat) . "</option>";
+                    }
+                  }
+                  echo "</optgroup>";
+                }
+              }
 
-              <optgroup label="বাড়ি সংক্রান্ত">
-                <option value="বাসাভাড়া">বাসা ভাড়া</option>
-                <option value="বিল">বিল</option>
-                <option value="গৃহস্থালীজিনিসপত্র">গৃহস্থালী জিনিসপত্র</option>
-                <option value="গৃহস্থালীমেরামত">গৃহস্থালী মেরামত</option>
-              </optgroup>
-
-              <optgroup label="ব্যক্তিগত">
-                <option value="মালজিনিস">মাল জিনিস</option>
-                <option value="কসমেটিক্স">কসমেটিক্স</option>
-                <option value="দাওয়াতখরচ">দাওয়াতখরচ</option>
-                <option value="বইখাতা">বইখাতা</option>
-                <option value="ঔষধ">ঔষধ</option>
-                <option value="পরিবার">পরিবার</option>
-                <option value="সাইকেলমেরামত">সাইকেল মেরামত</option>
-              </optgroup>
-
-              <optgroup label="আর্থিক">
-                <option value="প্রাপ্তি">প্রাপ্তি</option> 
-                <option value="প্রদান">প্রদান</option> 
-                <option value="আয়">আয়</option>
-              </optgroup>
-
-              <option value="অন্যান্য">অন্যান্য</option>
+              // Show categories not in any group
+              foreach ($categories as $cat_name => $row) {
+                $in_group = false;
+                foreach ($category_groups as $group_cats) {
+                  if (in_array($cat_name, $group_cats)) {
+                    $in_group = true;
+                    break;
+                  }
+                }
+                if (!$in_group) {
+                  echo "<option value='" . htmlspecialchars($cat_name, ENT_QUOTES) . "'>" . htmlspecialchars($cat_name) . "</option>";
+                }
+              }
+              ?>
             </select>
+
           </div>
 
         </div>
@@ -77,21 +73,24 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const editButtons = document.querySelectorAll('.edit-btn');
+document.addEventListener('DOMContentLoaded', function () {
+  const editButtons = document.querySelectorAll('.edit-btn');
 
-    editButtons.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        const id = btn.getAttribute('data-id');
-        const description = btn.getAttribute('data-description');
-        const amount = btn.getAttribute('data-amount');
-        const category = btn.getAttribute('data-category');
+  editButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const id = btn.getAttribute('data-id');
+      const date = btn.getAttribute('data-date');
+      const description = btn.getAttribute('data-description');
+      const amount = btn.getAttribute('data-amount');
+      const category = btn.getAttribute('data-category');
 
-        document.getElementById('edit-id').value = id;
-        document.getElementById('edit-description').value = description;
-        document.getElementById('edit-amount').value = amount;
-        document.getElementById('edit-category').value = category;
-      });
+      document.getElementById('edit-id').value = id;
+      document.getElementById('edit-date').value = date;
+      document.getElementById('edit-description').value = description;
+      document.getElementById('edit-amount').value = amount;
+      document.getElementById('edit-category').value = category;
     });
   });
+});
+
 </script>

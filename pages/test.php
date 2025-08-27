@@ -35,41 +35,41 @@ while ($row = $res->fetch_assoc()) {
 $stmt->close();
 ?>
 <div class="container">
-<div class="col-md-2">
-      <label class="form-label">নির্বাচন করুন</label>
-      <select name="category" class="form-select" required>
+  <div class="col-md-2">
+        <label class="form-label">নির্বাচন করুন</label>
+        <select name="category" class="form-select" required>
 
-        <option value="" disabled selected>ক্যাটাগরি দিন</option>
-        <?php
-        foreach ($category_groups as $group_name => $cats) {
-          if (!empty($cats)) {
-            echo "<optgroup label='" . htmlspecialchars($group_name, ENT_QUOTES) . "'>";
-            foreach ($cats as $cat) {
-              if (isset($categories[$cat])) {
-                echo "<option value='" . htmlspecialchars($cat, ENT_QUOTES) . "'>" . htmlspecialchars($cat) . "</option>";
+          <option value="" disabled selected>ক্যাটাগরি দিন</option>
+          <?php
+          foreach ($category_groups as $group_name => $cats) {
+            if (!empty($cats)) {
+              echo "<optgroup label='" . htmlspecialchars($group_name, ENT_QUOTES) . "'>";
+              foreach ($cats as $cat) {
+                if (isset($categories[$cat])) {
+                  echo "<option value='" . htmlspecialchars($cat, ENT_QUOTES) . "'>" . htmlspecialchars($cat) . "</option>";
+                }
+              }
+              echo "</optgroup>";
+            }
+          }
+
+          // Show categories not in any group
+          foreach ($categories as $cat_name => $row) {
+            $in_group = false;
+            foreach ($category_groups as $group_cats) {
+              if (in_array($cat_name, $group_cats)) {
+                $in_group = true;
+                break;
               }
             }
-            echo "</optgroup>";
-          }
-        }
-
-        // Show categories not in any group
-        foreach ($categories as $cat_name => $row) {
-          $in_group = false;
-          foreach ($category_groups as $group_cats) {
-            if (in_array($cat_name, $group_cats)) {
-              $in_group = true;
-              break;
+            if (!$in_group) {
+              echo "<option value='" . htmlspecialchars($cat_name, ENT_QUOTES) . "'>" . htmlspecialchars($cat_name) . "</option>";
             }
           }
-          if (!$in_group) {
-            echo "<option value='" . htmlspecialchars($cat_name, ENT_QUOTES) . "'>" . htmlspecialchars($cat_name) . "</option>";
-          }
-        }
-        ?>
-      </select>
+          ?>
+        </select>
 
-    </div>
+  </div>
 
 
     <hr>

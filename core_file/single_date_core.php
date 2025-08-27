@@ -63,18 +63,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     // 🔸 ক্যাটাগরি খোঁজার ফাংশন --> old
-    function detectCategory($description, $category_map)
+    // function detectCategory($description, $category_map)
+    // {
+    //     $desc_lower = mb_strtolower($description);
+    //     foreach ($category_map as $category => $keywords) {
+    //         foreach ($keywords as $keyword) {
+    //             if (mb_strpos($desc_lower, mb_strtolower($keyword)) !== false) {
+    //                 return $category;
+    //             }
+    //         }
+    //     }
+    //     return 'অন্যান্য';
+    // }
+
+
+    function detectCategory($description, $category_map)    // category found for best keyword function
     {
-        $desc_lower = mb_strtolower($description);
+        $desc_lower = mb_strtolower(trim($description));
+        $best_match = 'অন্যান্য';
+        $best_length = 0;
+
         foreach ($category_map as $category => $keywords) {
             foreach ($keywords as $keyword) {
-                if (mb_strpos($desc_lower, mb_strtolower($keyword)) !== false) {
-                    return $category;
+                $kw = mb_strtolower(trim($keyword));
+                if ($kw === '')
+                    continue;
+
+                // মিল খুঁজো
+                if (mb_strpos($desc_lower, $kw) !== false) {
+                    // লম্বা keyword হলে ওটাকেই প্রাধান্য দাও
+                    if (mb_strlen($kw) > $best_length) {
+                        $best_match = $category;
+                        $best_length = mb_strlen($kw);
+                    }
                 }
             }
         }
-        return 'অন্যান্য';
+
+        return $best_match;
     }
+
 
 
 
@@ -102,7 +130,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $entries = explode(',', $bulk_description);
     $inserted = 0;
-    $serial = 1; // প্রথম serial
+
+    // ওই তারিখে সর্বশেষ serial খুঁজে বের করো
+    $serial_query = $con->prepare("SELECT MAX(serial) as max_serial FROM cost_data WHERE user_id = ? AND date = ?");
+    $serial_query->bind_param("is", $user_id, $date);
+    $serial_query->execute();
+    $serial_result = $serial_query->get_result()->fetch_assoc();
+    $serial = ($serial_result['max_serial'] ?? 0) + 1;
+    $serial_query->close();
+
+
 
     foreach ($entries as $entry) {
         $entry = trim($entry);

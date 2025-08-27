@@ -1,3 +1,5 @@
+
+
 <!-- single_date_multi_entry.php -->
 <div class="">
   <form class="row g-3 mb-4" method="POST" action="core_file/single_date_core.php">

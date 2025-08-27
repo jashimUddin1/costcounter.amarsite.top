@@ -53,7 +53,7 @@ if (isset($_GET['date'])) {
 
             $bangla_date = $day_bn . " " . $month_bn . " " . $year_bn;
 
-            $_SESSION['success'] = "✅ {$bangla_date} তারিখের সব এন্ট্রি মুছে ফেলা হয়েছে!";
+            $_SESSION['warning'] = "<strong>{$bangla_date}</strong>  তারিখের সব এন্ট্রি মুছে ফেলা হয়েছে!";
         } else {
             $_SESSION['warning'] = "⚠️ ঐ তারিখে কোন এন্ট্রি পাওয়া যায়নি!";
         }
