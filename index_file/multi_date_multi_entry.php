@@ -94,7 +94,6 @@
       <input type="text" name="entries[${dateIndex}][bulk_description]" class="form-control" placeholder="যেমন: খাবার 50, ফল 530" required>
     </div>
     <div class="col-md-1 text-center">
-      <lebel class="form-label">বাদ</lebel>
       <button type="button" class="btn btn-danger remove-date-entry mt-2">✖</button>
     </div>`;
     container.appendChild(row);
