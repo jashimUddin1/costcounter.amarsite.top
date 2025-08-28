@@ -82,6 +82,10 @@ $res2 = $stmt2->get_result();
 while ($row = $res2->fetch_assoc()) {
   $daily_data[$row['day']] = $row['total'];
 }
+
+// ক্যাটেগরি ডেটা amount অনুযায়ী sort করা
+arsort($category_data);
+
 ?>
 
 <div class="container py-4">
