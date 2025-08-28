@@ -53,8 +53,11 @@
       </ul>
 
       <!-- ✅ Dashboard button: ডান পাশে যাবে -->
-      <div class="ms-auto">
-        <a href="dashboard.php" class="btn  btn-primary">Dashboard</a>
-      </div>
+      <!-- ✅ Dashboard button -->
+<div class="ms-auto">
+  <a href="dashboard.php?year=<?= $current_year ?>&month=<?= $current_month ?>" 
+     class="btn btn-primary">Dashboard</a>
+</div>
+
     </div>
   </nav>

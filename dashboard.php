@@ -91,7 +91,7 @@ arsort($category_data);
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>📊 ড্যাশবোর্ড - <?= $month_name ?> <?= $year_bn ?></h4>
-    <a href="index.php" class="btn btn-outline-secondary">← হোমে ফিরে যান</a>
+    <a href="index.php?year=<?= $year ?>&month=<?= $month ?>" class="btn btn-outline-secondary">← হোমে ফিরে যান</a>
   </div>
 
   <!-- ফিল্টার ফর্ম -->
