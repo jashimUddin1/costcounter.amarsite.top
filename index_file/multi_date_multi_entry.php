@@ -72,8 +72,11 @@
       </div>
     </div>
 
-    <button type="button" id="addMoreDate" class="btn btn-secondary mb-2">+ নতুন তারিখ</button>
-    <button type="submit" class="btn btn-success">✅ সবগুলো যুক্ত করুন</button>
+    <div class="text-center">
+        <button type="button" id="addMoreDate" class="btn btn-secondary mt-2 mb-2">+ নতুন তারিখ</button>
+        <button type="submit" class="btn btn-success">✅ সবগুলো যুক্ত করুন</button>
+    </div>
+    
   </form>
 </div>
 
