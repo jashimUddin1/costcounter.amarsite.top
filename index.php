@@ -1,4 +1,84 @@
 <?php
+
+session_start();
+include("db/dbcon.php");
+
+// ইউজার লগইন চেক
+if (!isset($_SESSION['authenticated'])) {
+  header("location: login/index.php");
+  exit();
+}
+
+$user_id = $_SESSION['auth_user']['id'];
+$query_string = $_SERVER['QUERY_STRING'];
+
+//for current month and year
+// if (!isset($_GET['year']) || !isset($_GET['month'])) {
+//   $latest_sql = "SELECT DATE_FORMAT(date, '%Y') AS y, DATE_FORMAT(date, '%m') AS m
+//                  FROM cost_data
+//                  WHERE user_id = '$user_id'
+//                  ORDER BY date DESC
+//                  LIMIT 1";
+//   $latest_res = mysqli_query($con, $latest_sql);
+
+//   if ($latest_res && mysqli_num_rows($latest_res) > 0) {
+//     $latest = mysqli_fetch_assoc($latest_res);
+//     $current_year = $latest['y'];
+//     $current_month = $latest['m'];
+//   } else {
+//     $current_year = date('Y');
+//     $current_month = date('m');
+//   }
+// } else {
+//   $current_year = intval($_GET['year']);
+//   $month_input = trim($_GET['month']);
+
+//   $month_map = [
+//     "January" => "January", "February" => "February", "March" => "March",
+//     "April" => "April", "May" => "May", "June" => "June",
+//     "July" => "July", "August" => "August", "September" => "September",
+//     "October" => "October", "November" => "November", "December" => "December"
+//   ];
+
+//   $month_input = ucfirst(strtolower($month_input));
+//   if (isset($month_map[$month_input])) {
+//     $current_month = $month_map[$month_input];
+//   } else {
+//     $current_month = str_pad($month_input, 2, '0', STR_PAD_LEFT);
+//   }
+// }
+
+
+
+
+//for current month and year
+if (!isset($_GET['year']) || !isset($_GET['month'])) {
+  $latest_sql = "SELECT DATE_FORMAT(date, '%Y') AS y, DATE_FORMAT(date, '%m') AS m
+                 FROM cost_data
+                 WHERE user_id = '$user_id'
+                 ORDER BY date DESC
+                 LIMIT 1";
+  $latest_res = mysqli_query($con, $latest_sql);
+
+  if ($latest_res && mysqli_num_rows($latest_res) > 0) {
+    $latest = mysqli_fetch_assoc($latest_res);
+    $current_year = $latest['y'];
+    $current_month = $latest['m'];
+  } else {
+    $current_year = date('Y');
+    $current_month = date('m');
+  }
+} else {
+  $current_year = intval($_GET['year']);
+  $month_input = trim($_GET['month']); 
+}
+
+
+
+
+
+
+
 function eng_to_bn($str)
 {
   $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -57,7 +137,7 @@ function bn_full_date($date_string)
 
   <!-- Session Deploy -->
   <div class="session_section">
-    <?php include "includes/session.php"; ?>
+    <?php include "includes/session_modal.php"; ?>
   </div>
 
   <!-- ✅ Data Entry Form Selector -->
@@ -106,7 +186,7 @@ function bn_full_date($date_string)
       </span>
 
       <span class="badge bg-warning me-2">
-        <?= !empty($_SESSION['multi_entry_enabled']) ? "<span style='color:red'>➕ Multiple Entry Mode ✅ আছে </span>" : "<span style='color:white'> Single Entry Mode ✅ আছে</span>" ?>
+        <?= !empty($_SESSION['multi_entry_enabled']) ? "<span style='color:white'>➕ Multiple Entry Mode ✅ আছে </span>" : "<span style='color:white'> Single Entry Mode ✅ আছে</span>" ?>
       </span>
 
       <span class="badge bg-warning me-2">
@@ -130,122 +210,8 @@ function bn_full_date($date_string)
 
   <hr>
 
-
-
   <!-- 👇 মাসিক খরচ -->
-  <div class="costDetails">
-    <div class="d-flex justify-content-between align-items-center mb-3 mt-3 monthly-cost-header">
-      <h4 class="mb-0">🗓️ মাসের খরচ</h4>
-
-      <form method="GET" class="d-inline-block ms-3">
-        <input type="hidden" name="year" value="<?= $current_year ?>">
-        <input type="hidden" name="month" value="<?= $current_month ?>">
-        <select name="sort" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
-          <option value="asc" <?= ($_GET['sort'] ?? '') === 'asc' ? 'selected' : '' ?>>পুরাতন আগে</option>
-          <option value="desc" <?= ($_GET['sort'] ?? '') === 'desc' ? 'selected' : '' ?>>নতুন আগে</option>
-
-        </select>
-      </form>
-
-
-      <div class="d-flex">
-        <h4 class="mb-0">অবশিষ্ট <span id="balanceAmount"><?= number_format($balance, 0) ?></span> টাকা</h4>
-
-        <?php if (!empty($_SESSION['edit_balance'])): ?>
-          <button class="btn btn-sm btn-outline-secondary edit-btn" data-bs-toggle="modal"
-            data-bs-target="#editBalanceModal" data-id="<?= $balance_id ?? '' ?>" data-value="<?= $balance ?? '' ?>">
-            ✏️
-          </button>
-        <?php endif; ?>
-
-      </div>
-    </div>
-
-
-    <?php foreach ($grouped_data as $date => $records): ?>
-      <div class="card mb-3">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-          <div>
-            <strong><?= bn_full_date($date) ?></strong>
-
-          </div>
-
-          <div class="rightEditDelete">
-
-            <?php if (!empty($_SESSION['edit_date'])): ?>
-              <button class="btn btn-sm btn-outline-secondary edit-date-btn" data-bs-toggle="modal"
-                data-bs-target="#editDateModal" data-date="<?= date('Y-m-d', strtotime($date)) ?>">
-                ✏️ তারিখ
-              </button>
-            <?php endif; ?>
-
-            <?php if (!empty($_SESSION['delete_day'])): ?>
-              <!-- Delete All Entries of This Date -->
-              <a href="core_file/delete_day_entries.php?date=<?= date('d-m-Y', strtotime($date)) ?>"
-                class="btn btn-sm btn-outline-danger"
-                onclick="return confirm('🔴 আপনি কি নিশ্চিত যে, <?= date('d/m/Y', strtotime($date)) ?> তারিখের সব এন্ট্রি মুছে ফেলতে চান?')">
-                🗑️
-              </a>
-            <?php endif; ?>
-
-          </div>
-        </div>
-
-        <div class="card-body">
-          <?php $total = 0;
-          $i = 1;
-          echo '<ul class="list-group list-group-flush">'; ?>
-          <?php foreach ($records as $txn): ?>
-            <?php if (!in_array($txn['category'], $excluded_categories)) {
-              $total += $txn['amount'];
-            } ?>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <?= eng_to_bn($i) ?>. <?= eng_to_bn($txn['description']) ?>     <?= eng_to_bn($txn['amount']) ?> টাকা
-                (<?= $txn['category'] ?>)
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-primary rounded-pill"><?= eng_to_bn($txn['amount']) ?>৳</span>
-
-                <!-- Edit Button -->
-                <?php if (!empty($_SESSION['edit_enabled'])): ?>
-                  <button class="btn btn-sm btn-outline-warning edit-btn"
-                      data-id="<?= $txn['id'] ?>"
-                      data-date="<?= date('Y-m-d', strtotime($txn['date'])) ?>"
-                      data-description="<?= htmlspecialchars($txn['description']) ?>"
-                      data-amount="<?= $txn['amount'] ?>"
-                      data-category="<?= htmlspecialchars($txn['category']) ?>"
-                      data-bs-toggle="modal"
-                      data-bs-target="#editCostDataModal">
-                      ✏️
-                  </button>
-
-                <?php endif; ?>
-
-                <!-- Delete Button -->
-                <?php if (!empty($_SESSION['delete_enabled'])): ?>
-                  <a href="core_file/delete_entry.php?id=<?= $txn['id'] ?>" class="btn btn-sm btn-outline-danger"
-                    onclick="return confirm('তুমি কি এই এন্ট্রিটি মুছে ফেলতে চাও?')">🗑️</a>
-                <?php endif; ?>
-
-              </div>
-            </li>
-            <?php $i++; endforeach; ?>
-          </ul>
-          <div class="mt-2 fw-bold">🔸 মোট: <?= eng_to_bn($total) ?> টাকা</div>
-        </div>
-      </div>
-    <?php endforeach; ?>
-
-    <div class="mb-5 mt-5">
-      <hr>
-    </div>
-
-    <div class="container rounded-3 alert alert-success text-center fs-5 fixed-bottom mb-0">
-      ✅ মোট ব্যয়: <strong><?= eng_to_bn($total_monthly_cost) ?> টাকা</strong>
-    </div>
-
-  </div>
+    <?php include "index_file/new_body.php"; ?>
 
 </div>
 
@@ -259,6 +225,9 @@ function bn_full_date($date_string)
 
 <!-- Edit Date Modal -->
 <?php include "index_file/edit_date_modal.php" ?>
+
+<!-- Set Balance Modal -->
+<?php include 'index_file/setBalanceModal.php' ?>
 
 <!-- #endregion modal end -->
 

@@ -8,6 +8,6 @@
   <link rel="stylesheet" href="<?php $css_link ?>">
 
 </head>
-<body>
+
 
 

@@ -67,7 +67,7 @@ if (!empty($query_string)) {
 
     <!-- Session Messages -->
     <div class="session_section">
-        <?php include "../includes/session.php"; ?>
+        <?php include "../includes/session_modal.php"; ?>
     </div>
 
     <!-- Categories Table -->

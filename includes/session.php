@@ -1,4 +1,4 @@
-<?php 
+<?php //includes/session.php
 if (isset($_SESSION['status'])) {
     echo "
     <div class='alert alert-success alert-dismissible fade show' role='alert'>

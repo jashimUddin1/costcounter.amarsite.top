@@ -154,6 +154,8 @@
       <!-- Submit Button ✅ -->
       <button type="submit" class="btn btn-sm btn-primary"> Save Setting</button>
     </form>
+
+     <a href="pages/update_logs.php" class="btn btn-outline-primary mt-3">🔄 View Update Logs</a>
   </div>
 </div>
 

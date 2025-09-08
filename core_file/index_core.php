@@ -1,16 +1,7 @@
 <!-- #region start block php code-->
 <?php
-session_start();
-include("db/dbcon.php");
 
-// ইউজার লগইন চেক
-if (!isset($_SESSION['authenticated'])) {
-  header("location: login/index.php");
-  exit();
-}
 
-$user_id = $_SESSION['auth_user']['id'];
-$query_string = $_SERVER['QUERY_STRING'];
 $current_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
 $current_month = isset($_GET['month']) ? $_GET['month'] : date('F');
 
@@ -45,15 +36,6 @@ $stmtTrans = $con->prepare($transQuery);
 $stmtTrans->bind_param("iis", $user_id, $current_year, $current_month);
 $stmtTrans->execute();
 $transResult = $stmtTrans->get_result();
-
-// 🔢 ব্যালেন্স আনো (settings টেবিল থেকে)
-$balance = 0;
-$setting_query = "SELECT * FROM settings WHERE `key` = 'balance' LIMIT 1";
-$setting_result = mysqli_query($con, $setting_query);
-if ($setting_result && mysqli_num_rows($setting_result) > 0) {
-  $row = mysqli_fetch_assoc($setting_result);
-  $balance = intval($row['value']); // ✅ দশমিক ছাড়া দেখানোর জন্য intval
-}
 
 // 💰 মাসিক ব্যালেন্স (যদি আলাদা থাকে)
 $monthly_balance = 0;

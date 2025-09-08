@@ -94,6 +94,11 @@ arsort($category_data);
     <a href="index.php?year=<?= $year ?>&month=<?= $month ?>" class="btn btn-outline-secondary">← হোমে ফিরে যান</a>
   </div>
 
+  <!-- Session Deploy -->
+  <div class="session_section">
+    <?php include "includes/session_modal.php"; ?>
+  </div>
+
   <!-- ফিল্টার ফর্ম -->
   <form class="row g-2 mb-4" method="get">
     <div class="col-md-3">
