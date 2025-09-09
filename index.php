@@ -184,9 +184,7 @@ $stmt->close();
 <!-- #endregion -->
 
 <?php include "index_file/header.php" ?>
-
 <?php include "index_file/header_nav.php" ?>
-
 
 
 <div class="container mt-3">

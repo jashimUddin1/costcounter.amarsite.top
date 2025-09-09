@@ -3,9 +3,10 @@
   <!-- Selected Month Badge -->
   <h5 class="mb-0">
     <span class="badge bg-success">
-      Selected Month: <?= $current_month ?>-<?= $current_year ?>
+      Selected Month: <?= date("F", mktime(0, 0, 0, $current_month, 1)) ?> - <?= $current_year ?>
     </span>
   </h5>
+
 
   <div class="selectedWrapper d-flex">
 
@@ -152,65 +153,65 @@
       </div>
 
       <!-- Submit Button ✅ -->
-      <button type="submit" class="btn btn-sm btn-primary"> Save Setting</button>
+      <button type="submit" name="save_setting_btn" class="btn btn-sm btn-primary"> Save Setting</button>
     </form>
 
-     <a href="pages/update_logs.php" class="btn btn-outline-primary mt-3">🔄 View Update Logs</a>
+    <a href="pages/update_logs.php" class="btn btn-outline-primary mt-3">🔄 View Update Logs</a>
   </div>
 </div>
 
 <!-- 🔁 JavaScript to toggle multi options & enforce required -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  /* ==============================
-     🔹 Category Options Toggle
-  ============================== */
-  const categoryEnabled = document.getElementById("categoryEnabled");
-  const categoryExtraOptions = document.getElementById("categoryExtraOptions");
+  document.addEventListener("DOMContentLoaded", function () {
+    /* ==============================
+       🔹 Category Options Toggle
+    ============================== */
+    const categoryEnabled = document.getElementById("categoryEnabled");
+    const categoryExtraOptions = document.getElementById("categoryExtraOptions");
 
-  function toggleCategoryOptions() {
-    if (categoryEnabled && categoryExtraOptions) {
-      if (categoryEnabled.checked) {
-        categoryExtraOptions.style.display = "block";
-      } else {
-        categoryExtraOptions.style.display = "none";
+    function toggleCategoryOptions() {
+      if (categoryEnabled && categoryExtraOptions) {
+        if (categoryEnabled.checked) {
+          categoryExtraOptions.style.display = "block";
+        } else {
+          categoryExtraOptions.style.display = "none";
+        }
       }
     }
-  }
 
-  if (categoryEnabled) {
-    toggleCategoryOptions();
-    categoryEnabled.addEventListener("change", toggleCategoryOptions);
-  }
-
-  /* ==============================
-     🔹 Entry Mode Toggle
-  ============================== */
-  const singleRadio = document.getElementById("singleEntry");
-  const multiRadio = document.getElementById("multiEntry");
-  const multiOptions = document.getElementById("multiEntryOptions");
-
-  if (singleRadio && multiRadio && multiOptions) {
-    const entryTypeRadios = multiOptions.querySelectorAll('input[name="entry_type_select[]"]');
-
-    function toggleMultiOptions() {
-      const isMulti = multiRadio.checked;
-
-      // Show or hide multi options
-      multiOptions.style.display = isMulti ? "block" : "none";
-
-      // Set or unset required on sub-options
-      entryTypeRadios.forEach(radio => {
-        radio.required = isMulti;
-      });
+    if (categoryEnabled) {
+      toggleCategoryOptions();
+      categoryEnabled.addEventListener("change", toggleCategoryOptions);
     }
 
-    // Initial setup
-    toggleMultiOptions();
+    /* ==============================
+       🔹 Entry Mode Toggle
+    ============================== */
+    const singleRadio = document.getElementById("singleEntry");
+    const multiRadio = document.getElementById("multiEntry");
+    const multiOptions = document.getElementById("multiEntryOptions");
 
-    // Event listeners
-    singleRadio.addEventListener("change", toggleMultiOptions);
-    multiRadio.addEventListener("change", toggleMultiOptions);
-  }
-});
+    if (singleRadio && multiRadio && multiOptions) {
+      const entryTypeRadios = multiOptions.querySelectorAll('input[name="entry_type_select[]"]');
+
+      function toggleMultiOptions() {
+        const isMulti = multiRadio.checked;
+
+        // Show or hide multi options
+        multiOptions.style.display = isMulti ? "block" : "none";
+
+        // Set or unset required on sub-options
+        entryTypeRadios.forEach(radio => {
+          radio.required = isMulti;
+        });
+      }
+
+      // Initial setup
+      toggleMultiOptions();
+
+      // Event listeners
+      singleRadio.addEventListener("change", toggleMultiOptions);
+      multiRadio.addEventListener("change", toggleMultiOptions);
+    }
+  });
 </script>

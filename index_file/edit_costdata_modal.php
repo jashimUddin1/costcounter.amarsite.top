@@ -73,6 +73,13 @@
 </div>
 
 <script>
+
+  function en2bn_Number(str) {
+  const eng = ['0','1','2','3','4','5','6','7','8','9'];
+  const bn  = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  return str.replace(/[0-9]/g, d => bn[d]);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const editButtons = document.querySelectorAll('.edit-btn');
 
@@ -86,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       document.getElementById('edit-id').value = id;
       document.getElementById('edit-date').value = date;
-      document.getElementById('edit-description').value = description;
+      document.getElementById('edit-description').value = en2bn_Number(description);
       document.getElementById('edit-amount').value = amount;
       document.getElementById('edit-category').value = category;
     });
