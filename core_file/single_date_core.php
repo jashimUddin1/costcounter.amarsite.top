@@ -10,6 +10,7 @@ if (!isset($_SESSION['authenticated'])) {
 
 $user_id = $_SESSION['auth_user']['id'] ?? null;
 
+
 // ফর্ম সাবমিট চেক
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['date'] ?? '';
@@ -28,6 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $year = date('Y', strtotime($date));
     $month = date('F', strtotime($date));
     $day_name = date('l', strtotime($date));
+
+    function en2bn_number($str)
+    {
+        $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        return str_replace($eng, $bn, $str);
+    }
 
     // 🔸 বাংলা সংখ্যা থেকে ইংরেজি রূপান্তর ফাংশন
     function bn2en_number($string)
@@ -193,9 +201,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($inserted > 0) {
-        $_SESSION['success'] = "✅ {$inserted}টি খরচ সফলভাবে যোগ হয়েছে!";
+        $_SESSION['success'] = "✅ " . en2bn_number($inserted) . "টি এন্টি সফলভাবে যোগ হয়েছে!";
     } else {
-        $_SESSION['danger'] = "❌ কোনো খরচ যোগ হয়নি! ফরম্যাট চেক করুন!";
+        $_SESSION['danger'] = "❌ কোনো এন্টি যোগ হয়নি! ফরম্যাট চেক করুন!";
     }
 
     header("Location: ../index.php?$redirect_query");

@@ -22,7 +22,8 @@ $result = $stmt->get_result();
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <title>🔄 Update Logs</title>
+  <link rel="icon" type="image/png" href="../images/update_icon.png">
+  <title> Update Logs</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -41,7 +42,7 @@ $result = $stmt->get_result();
             <thead class="table-dark">
               <tr>
                 <th>ID</th>
-                <th>Date</th>
+                <th>For</th>
                 <th>Update Type</th>
                 <th>Previous Value</th>
                 <th>Updated Value</th>
@@ -52,10 +53,10 @@ $result = $stmt->get_result();
               <?php while ($row = $result->fetch_assoc()) { ?>
                 <tr>
                   <td><?= $row['id'] ?></td>
-                  <td><?= date("Y-m-d", strtotime($row['date'])) ?></td>
+                  <td><?= date("Y-F", strtotime($row['date'])) ?></td>
                   <td><?= htmlspecialchars($row['update_type']) ?></td>
-                  <td class="text-danger"><?= number_format($row['previous_value'], 2) ?></td>
-                  <td class="text-success"><?= number_format($row['updated_value'], 2) ?></td>
+                  <td class="text-danger"><?= number_format($row['previous_value'], 0) ?></td>
+                  <td class="text-success"><?= number_format($row['updated_value'], 0) ?></td>
                   <td><?= $row['updated_at'] ?></td>
                 </tr>
               <?php } ?>

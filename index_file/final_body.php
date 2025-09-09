@@ -43,7 +43,9 @@ if ($txn_result && mysqli_num_rows($txn_result) > 0) {
             $total_monthly_income += $txn['amount'];
         } else {
             $current_balance -= $txn['amount'];
-            $total_monthly_cost += $txn['amount'];
+             if (!in_array($txn['category'], $excluded_categories)) {
+                $total_monthly_cost += $txn['amount'];
+            }            
         }
 
         $txn['running_balance'] = $current_balance;
