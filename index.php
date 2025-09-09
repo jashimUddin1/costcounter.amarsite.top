@@ -11,6 +11,7 @@ if (!isset($_SESSION['authenticated'])) {
 }
 
 $user_id = $_SESSION['auth_user']['id'];
+$query_string = $_SERVER['QUERY_STRING'];
 
 // English → Bangla digit
 function en2bn_number($str)
