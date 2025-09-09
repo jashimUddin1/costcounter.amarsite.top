@@ -9,10 +9,22 @@ if (!isset($_SESSION['auth_user'])) {
 
 $user_id = $_SESSION['auth_user']['id'];
 
+$redirect_url = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : "../index.php";
+
+function bn2en_number($bn_number) {
+    $bn_digits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    $en_digits = ['0','1','2','3','4','5','6','7','8','9'];
+
+    // str_replace দিয়ে সব বাংলা সংখ্যা ইংরেজিতে রূপান্তর করা
+    $en_number = str_replace($bn_digits, $en_digits, $bn_number);
+
+    return $en_number;
+}
+
 // ------------------ Balance Update ------------------
 if (isset($_POST['balance_bd_btn'])) {
     $id = intval($_POST['id']);
-    $amount = intval($_POST['balance_bd']);
+    $amount = intval(bn2en_number($_POST['balance_bd']));
     $balance_type = $_POST['balance_type'];
 
     if ($id > 0 && $amount >= 0) {
@@ -65,7 +77,7 @@ if (isset($_POST['balance_bd_btn'])) {
         $_SESSION['warning'] = "⚠️ ভুল তথ্য দেওয়া হয়েছে!";
     }
 
-    header("Location: ../index.php");
+    header("Location: $redirect_url");
     exit();
 }
 
@@ -88,13 +100,13 @@ elseif (isset($_POST['set_balance_btn'])) {
         $_SESSION['danger'] = "❌ Balance সেট করা যায়নি!";
     }
 
-    header("Location: ../index.php");
+    header("Location: $redirect_url");
     exit();
 }
 
 // ------------------ Invalid Request ------------------
 else {
     $_SESSION['warning'] = "⚠️ Invalid Request! You are unauthorized people";
-    header("Location: ../index.php");
+    header("Location: $redirect_url");
     exit();
 }
