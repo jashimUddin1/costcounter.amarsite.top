@@ -17,8 +17,8 @@
         <ul class="dropdown-menu">
           <?php foreach ($months as $num => $name): ?>
             <li>
-              <a class="dropdown-item <?= ($num == $current_month) ? 'active' : '' ?>" 
-                 href="?year=<?= $current_year ?>&month=<?= $num ?>">
+              <a class="dropdown-item <?= ($num == $current_month) ? 'active' : '' ?>"
+                href="?year=<?= $current_year ?>&month=<?= $num ?>">
                 <?= $name ?>
               </a>
             </li>
@@ -34,8 +34,8 @@
         <ul class="dropdown-menu">
           <?php foreach ($years as $year): ?>
             <li>
-              <a class="dropdown-item <?= ($year == $current_year) ? 'active' : '' ?>" 
-                 href="?year=<?= $year ?>&month=<?= $current_month ?>">
+              <a class="dropdown-item <?= ($year == $current_year) ? 'active' : '' ?>"
+                href="?year=<?= $year ?>&month=<?= $current_month ?>">
                 <?= en2bn_number($year) ?>
               </a>
             </li>
@@ -45,15 +45,15 @@
 
       <!-- বর্তমান মাস -->
       <?php if (!empty($months)): ?>
-        <li class="nav-item dropdown" >
+        <li class="nav-item dropdown">
           <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            <?= en2bn_month($months[$current_month]) ?> 
+            <?= en2bn_month($months[$current_month]) ?>
           </button>
           <ul class="dropdown-menu">
             <?php foreach ($months as $num => $name): ?>
               <li>
-                <a class="dropdown-item <?= ($num == $current_month) ? 'active' : '' ?>" 
-                   href="?year=<?= $current_year ?>&month=<?= $num ?>">
+                <a class="dropdown-item <?= ($num == $current_month) ? 'active' : '' ?>"
+                  href="?year=<?= $current_year ?>&month=<?= $name ?>">
                   <?= en2bn_month($name) ?>
                 </a>
               </li>
@@ -63,10 +63,16 @@
       <?php endif; ?>
     </ul>
 
+    <?php // code for dashboard link
+      if (isset($_GET['month']) || isset($_GET['year'])) {
+        $current_year = $_GET['year'];
+        $name = $_GET['month'];
+      }
+    ?>
+
     <!-- Dashboard button -->
     <div class="ms-auto">
-      <a href="dashboard.php?year=<?= $current_year ?>&month=<?= $current_month ?>" 
-         class="btn btn-primary">Dashboard</a>
+      <a href="dashboard.php?year=<?= $current_year ?>&month=<?= $name ?>" class="btn btn-primary">Dashboard</a>
     </div>
   </div>
 </nav>
