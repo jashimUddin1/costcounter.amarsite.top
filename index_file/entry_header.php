@@ -55,9 +55,7 @@
         </div>
 
         <!-- ✅ Only for Multiple Mode -->
-        <div id="multiEntryOptions"
-          style="display: <?= !empty($_SESSION['multi_entry_enabled']) ? 'block' : 'none' ?>; margin-left: 1rem;">
-          <label class="form-label mt-2">✅ Select Options:</label>
+        <div id="multiEntryOptions" style="display: <?= !empty($_SESSION['multi_entry_enabled']) ? 'block' : 'none' ?>; margin-left: 1rem;">
 
           <div class="form-check">
             <input class="form-check-input" type="radio" name="entry_type_select[]" value="single_date"
@@ -139,9 +137,6 @@
           </div>
         </div>
       </div>
-
-
-
 
       <div class="mb-4">
         <h6>⚙️ সেটিংস স্ট্যাটাস প্রদর্শন</h6>

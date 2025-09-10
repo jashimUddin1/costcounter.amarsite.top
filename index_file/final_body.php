@@ -173,8 +173,7 @@ if ($txn_result && mysqli_num_rows($txn_result) > 0) {
         <hr>
     </div>
 
-    <div class="container rounded-3 alert alert-success fixed-bottom mb-0 d-flex justify-content-between align-items-center fs-5">
-        <!-- Left -->
+    <div class="container rounded-3 alert alert-success fixed-bottom mb-0 d-flex justify-content-between align-items-center fs-5">      
         <div class="text-start">
              <strong>মোট আয়: <?= en2bn_number($total_monthly_income) ?> টাকা</strong>
         </div>
@@ -184,7 +183,6 @@ if ($txn_result && mysqli_num_rows($txn_result) > 0) {
              <strong>মোট ব্যয়: <?= en2bn_number($total_monthly_cost) ?> টাকা</strong>
         </div>
 
-        <!-- Right -->
         <div class="text-end">
              <strong>অবশিষ্ট: <?= en2bn_number($txn['running_balance']) ?> টাকা</strong>
         </div>
