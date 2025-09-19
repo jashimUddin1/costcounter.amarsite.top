@@ -10,7 +10,6 @@ if (!isset($_SESSION['authenticated'])) {
 
 $user_id = $_SESSION['auth_user']['id'] ?? null;
 
-
 // ফর্ম সাবমিট চেক
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['date'] ?? '';
@@ -30,157 +29,122 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $month = date('F', strtotime($date));
     $day_name = date('l', strtotime($date));
 
+    // 🔸 ইংরেজি ↔ বাংলা সংখ্যা রূপান্তর
     function en2bn_number($str)
     {
         $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
         $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
         return str_replace($eng, $bn, $str);
     }
-
-    // 🔸 বাংলা সংখ্যা থেকে ইংরেজি রূপান্তর ফাংশন
-    function bn2en_number($string)
+    function bn2en_number($str)
     {
         $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-        $en = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-        return str_replace($bn, $en, $string);
+        $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        return str_replace($bn, $eng, $str);
     }
 
-
-    // 🔸 ক্যাটাগরি কিওয়ার্ড ম্যাপ
-    $category_map = [];  // খালি array
-
-    $stmt = $con->prepare("SELECT category_name, category_keywords FROM categories WHERE user_id = ?");
+    // 🔸 ক্যাটাগরি কিওয়ার্ড ম্যাপ (nested category → sub_category → keywords)
+    $category_map = [];
+    $stmt = $con->prepare("SELECT category_name, sub_category, category_keywords 
+                           FROM categories 
+                           WHERE user_id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $res = $stmt->get_result();
 
     while ($row = $res->fetch_assoc()) {
         $cat_name = trim($row['category_name']);
-        $cats = trim($row['category_keywords']);
+        $sub_cat = trim($row['sub_category']);
+        if ($sub_cat === '' || strtolower($sub_cat) === 'none') {
+            $sub_cat = 'none';
+        }
 
+        $cats = trim($row['category_keywords']);
         if ($cats !== '') {
             $keywords = array_map('trim', explode(',', $cats));
-            $category_map[$cat_name] = $keywords;
         } else {
-            $category_map[$cat_name] = []; // কীওয়ার্ড না থাকলে খালি array
+            $keywords = [];
         }
-    }
 
+        if (!isset($category_map[$cat_name])) {
+            $category_map[$cat_name] = [];
+        }
+        $category_map[$cat_name][$sub_cat] = $keywords;
+    }
     $stmt->close();
 
-
-
-    // 🔸 ক্যাটাগরি খোঁজার ফাংশন --> old
-    // function detectCategory($description, $category_map)
-    // {
-    //     $desc_lower = mb_strtolower($description);
-    //     foreach ($category_map as $category => $keywords) {
-    //         foreach ($keywords as $keyword) {
-    //             if (mb_strpos($desc_lower, mb_strtolower($keyword)) !== false) {
-    //                 return $category;
-    //             }
-    //         }
-    //     }
-    //     return 'অন্যান্য';
-    // }
-
-
-    function detectCategory($description, $category_map)    // category found for best keyword function
+    // 🔸 detectCategory function
+    function detectCategory($description, $category_map)
     {
         $desc_lower = mb_strtolower(trim($description));
-        $best_match = 'অন্যান্য';
+        $best_match = [
+            'category' => 'অন্যান্য',
+            'keyword' => ''
+        ];
         $best_length = 0;
 
-        foreach ($category_map as $category => $keywords) {
-            foreach ($keywords as $keyword) {
-                $kw = mb_strtolower(trim($keyword));
-                if ($kw === '')
-                    continue;
+        foreach ($category_map as $category => $subcats) {
+            foreach ($subcats as $sub_cat => $keywords) {
+                foreach ($keywords as $keyword) {
+                    $kw = mb_strtolower(trim($keyword));
+                    if ($kw === '')
+                        continue;
 
-                // মিল খুঁজো
-                if (mb_strpos($desc_lower, $kw) !== false) {
-                    // লম্বা keyword হলে ওটাকেই প্রাধান্য দাও
-                    if (mb_strlen($kw) > $best_length) {
-                        $best_match = $category;
-                        $best_length = mb_strlen($kw);
+                    if (mb_strpos($desc_lower, $kw) !== false) {
+                        if (mb_strlen($kw) > $best_length) {
+                            $best_match['category'] = $category;
+                            $best_match['keyword'] = $keyword;
+                            $best_length = mb_strlen($kw);
+                        }
                     }
                 }
             }
         }
-
         return $best_match;
     }
 
-
-
-
-    // function detectCategory($description, $category_map)
-    // {
-    //     $desc_lower = mb_strtolower(trim($description));
-
-    //     foreach ($category_map as $category => $keywords) {
-    //         foreach ($keywords as $keyword) {
-    //             $kw = mb_strtolower(trim($keyword));
-
-    //             if ($kw === '')
-    //                 continue; // ফাঁকা বাদ
-
-    //             // শব্দ ম্যাচ (পুরো শব্দ মিলবে, আংশিক নয়)
-    //             if (preg_match('/\b' . preg_quote($kw, '/') . '\b/u', $desc_lower)) {
-    //                 return $category;
-    //             }
-    //         }
-    //     }
-
-    //     return 'অন্যান্য';
-    // }
-
-
+    // ======================
+    // Entry processing
+    // ======================
     $entries = explode(',', $bulk_description);
     $inserted = 0;
 
     // ওই তারিখে সর্বশেষ serial খুঁজে বের করো
-    $serial_query = $con->prepare("SELECT MAX(serial) as max_serial FROM cost_data WHERE user_id = ? AND date = ?");
+    $serial_query = $con->prepare("SELECT MAX(serial) as max_serial 
+                                   FROM cost_data 
+                                   WHERE user_id = ? AND date = ?");
     $serial_query->bind_param("is", $user_id, $date);
     $serial_query->execute();
     $serial_result = $serial_query->get_result()->fetch_assoc();
     $serial = ($serial_result['max_serial'] ?? 0) + 1;
     $serial_query->close();
 
-
-
     foreach ($entries as $entry) {
         $entry = trim($entry);
-
-        // বাংলা সংখ্যা ইংরেজি করো
-        $entry = bn2en_number($entry);
-
-        // "১. " বা "1. " এই ধরণের সিরিয়াল রিমুভ করো
+        $entry = bn2en_number($entry); // 
+        // serial no remove
         $entry = preg_replace('/^\d+\.\s*/u', '', $entry);
-
-        // "টাকা" শব্দ রিমুভ করো
+        // tk remove
         $entry = str_replace([' টাকা', 'টাকা', ' tk', 'tk'], '', $entry);
 
-        // যদি পরিমাণে প্লাস থাকে (যেমন: 20+20+10)
         if (preg_match('/^(.+?)\s*([\d\+\.\s]+)$/u', $entry, $matches)) {
-
             $description = trim($matches[1]);
             $amount_str = trim($matches[2]);
 
-            // প্লাস দিয়ে ভাগ করে যোগফল বের করো
+            // প্লাস দিয়ে আলাদা করে যোগফল
             $parts = explode('+', $amount_str);
             $total_amount = 0;
             foreach ($parts as $p) {
                 $total_amount += floatval(trim($p));
             }
 
-            $category = detectCategory($description, $category_map);
+            $result = detectCategory($description, $category_map);
+            $category = $result['category'];
+            $match_keyword = $result['keyword'];
 
-            $stmt = $con->prepare("INSERT INTO cost_data 
-                (user_id, year, month, date, day_name, description, amount, category, serial, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $con->prepare("INSERT INTO cost_data (user_id, year, month, date, day_name, description, amount, match_keyword, category, serial, created_at)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param(
-                "iissssdsis",
+                "iissssissis",
                 $user_id,
                 $year,
                 $month,
@@ -188,10 +152,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $day_name,
                 $description,
                 $total_amount,
+                $match_keyword,
                 $category,
                 $serial,
                 $created_at
             );
+
 
             if ($stmt->execute()) {
                 $inserted++;
@@ -200,6 +166,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // ======================
+    // Session Message
+    // ======================
     if ($inserted > 0) {
         $_SESSION['success'] = "✅ " . en2bn_number($inserted) . "টি এন্টি সফলভাবে যোগ হয়েছে!";
     } else {
@@ -208,6 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     header("Location: ../index.php?$redirect_query");
     exit();
+
 } else {
     header("Location: ../index.php");
     exit();

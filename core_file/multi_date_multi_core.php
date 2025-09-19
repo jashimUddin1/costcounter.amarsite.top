@@ -1,4 +1,4 @@
-<?php // core_file/merged_multi_core.php
+<?php // core_file/multi_date_multi_core.php
 session_start();
 include("../db/dbcon.php");
 
@@ -11,14 +11,21 @@ if($_SERVER['REQUEST_METHOD']!=='POST'){
 
 $redirect_query = $_POST['redirect_query'] ?? '';
 
-// get categories
+// get categories (with sub_category optional future use)
 $category_map = [];
-$stmt = $con->prepare("SELECT category_name, category_keywords FROM categories WHERE user_id=?");
+$stmt = $con->prepare("SELECT category_name, sub_category, category_keywords FROM categories WHERE user_id=?");
 $stmt->bind_param("i",$user_id);
 $stmt->execute();
 $res = $stmt->get_result();
 while($row=$res->fetch_assoc()){
-    $category_map[$row['category_name']] = $row['category_keywords']!==''? array_map('trim',explode(',',$row['category_keywords'])):[];
+    $cat_name = trim($row['category_name']);
+    $sub_cat  = trim($row['sub_category']);
+    if($sub_cat==='' || strtolower($sub_cat)==='none') $sub_cat='none';
+
+    $cats = trim($row['category_keywords']);
+    $keywords = $cats!==''? array_map('trim',explode(',',$cats)):[];
+    if(!isset($category_map[$cat_name])) $category_map[$cat_name]=[];
+    $category_map[$cat_name][$sub_cat] = $keywords;
 }
 $stmt->close();
 
@@ -29,22 +36,26 @@ function bn2en_number($s){
     return str_replace($bn,$en,$s);
 }
 
-// detect category
+// detect category (returns category + keyword)
 function detectCategory($desc,$category_map){
     $desc_lower = mb_strtolower(trim($desc));
-    $best_match = 'অন্যান্য';
+    $best = ['category'=>'অন্যান্য','keyword'=>''];
     $best_length=0;
-    foreach($category_map as $cat=>$keywords){
-        foreach($keywords as $kw){
-            $kw=mb_strtolower(trim($kw));
-            if($kw=='' ) continue;
-            if(mb_strpos($desc_lower,$kw)!==false && mb_strlen($kw)>$best_length){
-                $best_match=$cat;
-                $best_length=mb_strlen($kw);
+
+    foreach($category_map as $cat=>$subcats){
+        foreach($subcats as $sub=>$keywords){
+            foreach($keywords as $kw){
+                $kw=mb_strtolower(trim($kw));
+                if($kw=='') continue;
+                if(mb_strpos($desc_lower,$kw)!==false && mb_strlen($kw)>$best_length){
+                    $best['category']=$cat;
+                    $best['keyword']=$kw;
+                    $best_length=mb_strlen($kw);
+                }
             }
         }
     }
-    return $best_match;
+    return $best;
 }
 
 // process each date row
@@ -79,11 +90,17 @@ foreach($_POST['entries'] as $entry){
             $amt=0;
             foreach($parts as $p) $amt+=floatval(trim($p));
 
-            $cat = detectCategory($desc,$category_map);
+            $result = detectCategory($desc,$category_map);
+            $cat = $result['category'];
+            $match_kw = $result['keyword'];
 
-            $stmt = $con->prepare("INSERT INTO cost_data (user_id,year,month,date,day_name,description,amount,category,serial,created_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("iissssdsis",$user_id,$year,$month,$date,$day_name,$desc,$amt,$cat,$serial,$created_at);
+            $stmt = $con->prepare("INSERT INTO cost_data 
+                (user_id,year,month,date,day_name,description,amount,match_keyword,category,serial,created_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("iissssissis",
+                $user_id,$year,$month,$date,$day_name,
+                $desc,$amt,$match_kw,$cat,$serial,$created_at
+            );
             if($stmt->execute()) $inserted++;
             $serial++;
         }

@@ -169,7 +169,7 @@ if (!empty($query_string)) {
                             </div>
                         </div>
 
-                    <?php $firstRow = false; endforeach; endforeach; ?>
+                        <?php $firstRow = false; endforeach; endforeach; ?>
             </tbody>
         </table>
     </div>
@@ -206,6 +206,10 @@ if (!empty($query_string)) {
                 </div>
                 <button type="submit" name="cat_option_save_btn" class="btn btn-primary w-100">Save Settings</button>
             </form>
+            <hr>
+            <div class="text-center">
+                <a class="btn btn-info mt-2 rounded" href="category_text.php">Category list Developer Mode</a>
+            </div>
         </div>
     </div>
 

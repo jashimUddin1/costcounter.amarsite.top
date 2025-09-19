@@ -37,13 +37,51 @@ while ($row = $res->fetch_assoc()) {
   }
 }
 $stmt->close();
+
+$path = "../"; // Adjust path for includes
+$page_title = "Category List";
+include '../master_layout/header.php';
+
 ?>
 
+  <div class="mt-0">
+    <div class="card-header p-2  bg-info text-white">
+      <div class="container d-flex justify-content-between">
+        <h5 class="mb-0">Category Details</h5>
+      <a href="../index.php" class="btn btn-light btn-sm"> Back</a>
+      </div>
+    </div>
+  </div>  
+
+
 <div class="container">
+
+
   <h2 class="mt-4">ক্যাটাগরি, সাব-ক্যাটাগরি এবং কীওয়ার্ড</h2>
   <hr>
 
-  <?php include '../includes/header.php'; ?>
+
+
+       <?php foreach ($categories as $cat_name => $subs): ?>
+        <?php foreach ($subs as $sub_name => $keywords): ?>
+    <tr>
+      <td class="text-start word-wrap">
+        <?= htmlspecialchars($cat_name) . " => " ?>
+      </td>
+      <td class="text-start word-wrap">
+        <?= ($sub_name === '' ? "<span class='text-muted'>[কোনো সাব-ক্যাটাগরি নাই]</span>" : htmlspecialchars($sub_name)) . " -> " ?>
+      <td class="text-start word-wrap">
+        
+        <?php if (empty($keywords)): ?>
+          <span class='text-white bg-dark p-1 rounded'>কোনো কীওয়ার্ড নাই</span>
+        <?php else: ?>
+          <?= implode(', ', array_map('htmlspecialchars', $keywords)) ?>
+        <?php endif;  echo "<br>"?>
+      </td>
+    </tr>
+    <?php endforeach; echo "<br>"?>
+      <?php endforeach; ?>
+
 
   <table class="table table-bordered table-striped">
     <thead>
@@ -54,6 +92,8 @@ $stmt->close();
       </tr>
     </thead>
     <tbody>
+
+
       <?php foreach ($categories as $cat_name => $subs): ?>
         <?php foreach ($subs as $sub_name => $keywords): ?>
           <tr>
@@ -79,4 +119,4 @@ $stmt->close();
   <pre><?php print_r($categories); ?></pre>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include '../master_layout/footer.php'; ?>
