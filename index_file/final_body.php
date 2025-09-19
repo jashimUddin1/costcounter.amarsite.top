@@ -38,9 +38,12 @@ if ($txn_result && mysqli_num_rows($txn_result) > 0) {
     while ($txn = mysqli_fetch_assoc($txn_result)) {
         $date = date('Y-m-d', strtotime($txn['date']));
 
+        if ($txn['category'] === 'আয়') {
+            $total_monthly_income += $txn['amount'];
+        } 
+
         if ($txn['category'] === 'আয়' || $txn['category'] === 'প্রাপ্তি') {
             $current_balance += $txn['amount'];
-            $total_monthly_income += $txn['amount'];
         } else {
             $current_balance -= $txn['amount'];
              if (!in_array($txn['category'], $excluded_categories)) {
