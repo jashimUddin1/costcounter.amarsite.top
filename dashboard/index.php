@@ -3,16 +3,17 @@
 <?php //index.php
 session_start();
 include "../db/dbcon.php";
-$page_title = "ড্যাশবোর্ড";
-$path = "../";
-$css_link = "../css/dashboard.css";
-include "../master_layout/header.php";
 
 if (!isset($_SESSION['authenticated'])) {
     header("Location: ../login/index.php");
     exit();
 }
 $user_id = $_SESSION['auth_user']['id'];
+
+$page_title = "ড্যাশবোর্ড";
+$path = "../";
+$css_link = "../css/dashboard.css";
+include "../master_layout/header.php";
 
 //helpers and all input here
 require_once "helpers.php";
@@ -23,11 +24,13 @@ $category_data = [];
 $axis_data     = [];
 $axis_labels   = [];
 
-
 require "queries.php";
 ?>
 
-<div class="container py-4">
+<body>
+<?php include "layout/top_header.php"; ?>
+
+<div class="container">
   <?php include "layout/header_section.php"; ?>
   <div class="session_section mb-3"><?php include "../includes/session_modal.php"; ?></div>
   <div class="row g-4">

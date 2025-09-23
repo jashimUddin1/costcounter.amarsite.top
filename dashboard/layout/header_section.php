@@ -1,5 +1,6 @@
-<?php
-// Database থেকে ওই বছরের available months বের করি (order ঠিকভাবে Jan→Dec)
+
+
+<?php // dashboard/layout/header_section.php
 if (!$is_all_year) {
   $month_sql = "SELECT DISTINCT month 
                 FROM cost_data 
@@ -25,7 +26,7 @@ if (!$is_all_year) {
 
   $available_months = [];
   while ($row = $month_res->fetch_assoc()) {
-      $available_months[] = $row['month']; // English মাস নাম
+    $available_months[] = $row['month']; // English মাস নাম
   }
   $month_stmt->close();
 } else {
@@ -48,10 +49,10 @@ $yr_stmt->close();
   <div class="d-none d-lg-flex justify-content-between align-items-center">
     <div>
       <h5 class="mb-0">
-        📊 ড্যাশবোর্ড - 
-        <?= $is_all_year 
-            ? "সব বছর" 
-            : ($is_all_month ? "সকল মাস $year_bn" : "{$month_label} {$year_bn}") ?>
+        
+        <?= $is_all_year
+          ? "সব বছর"
+          : ($is_all_month ? "সকল মাস $year_bn" : "{$month_label} {$year_bn}") ?>
       </h5>
     </div>
 
@@ -82,11 +83,12 @@ $yr_stmt->close();
       <button class="btn btn-primary" type="submit">দেখুন</button>
     </form>
 
-    <!-- Back Button -->
+
     <div>
-      <a href="../index.php?year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" class="btn btn-outline-secondary">
-        ← হোমে ফিরে যান
-      </a>
+      <!-- Settings button -->
+      <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#settingsMenu">
+        ⚙️
+      </button>
     </div>
   </div>
 
@@ -94,14 +96,14 @@ $yr_stmt->close();
   <div class="d-lg-none">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h6 class="mb-0">
-        📊 ড্যাশবোর্ড - 
-        <?= $is_all_year 
-            ? "সব বছর" 
-            : ($is_all_month ? "সকল মাস $year_bn" : "{$month_label} {$year_bn}") ?>
+        <?= $is_all_year
+          ? "সব বছর"
+          : ($is_all_month ? "সকল মাস $year_bn" : "{$month_label} {$year_bn}") ?>
       </h6>
-      <a href="../index.php?year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" class="btn btn-outline-secondary btn-sm">
-        ← হোম
-      </a>
+      <!-- Settings button -->
+      <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#settingsMenu">
+        ⚙️
+      </button>
     </div>
 
     <!-- Filter Form -->
@@ -130,5 +132,29 @@ $yr_stmt->close();
 
       <button class="btn btn-primary" type="submit">দেখুন</button>
     </form>
+  </div>
+</div>
+
+<!-- Settings Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="settingsMenu">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">⚙️ Settings</h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="list-group">
+      <a href="index.php?dashboard=1&year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" 
+         class="list-group-item list-group-item-action <?= (!isset($_GET['dashboard']) || $_GET['dashboard']=='1') ? 'active' : '' ?>">
+         Dashboard One
+      </a>
+      <a href="index.php?dashboard=2&year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" 
+         class="list-group-item list-group-item-action <?= (isset($_GET['dashboard']) && $_GET['dashboard']=='2') ? 'active' : '' ?>">
+         Dashboard Two
+      </a>
+      <a href="index.php?dashboard=3&year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" 
+         class="list-group-item list-group-item-action <?= (isset($_GET['dashboard']) && $_GET['dashboard']=='3') ? 'active' : '' ?>">
+         Dashboard Three
+      </a>
+    </div>
   </div>
 </div>

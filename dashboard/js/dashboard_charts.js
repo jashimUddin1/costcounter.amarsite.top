@@ -108,26 +108,53 @@ function en2bnNumber(number) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true } },
+      scales: { 
+        y: { 
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return en2bnNumber(value.toString());
+            }
+          }
+        },
+        x: {
+          ticks: {
+            callback: function(value, index, ticks) {
+              return en2bnNumber(this.getLabelForValue(value));
+            }
+          }
+        }
+      },
       plugins: {
         tooltip: {
           callbacks: {
             label: function(context) {
               let value = context.parsed.y || 0;
-              let day   = context.label;
-              if (value > 0) {
-                return `${day} তারিখের খরচ ${value.toLocaleString()}`;
+              if (value === 0) return null;
+
+              let mode = axisLabelTitle;
+              let label = context.label;
+              let valBn = en2bnNumber(value.toLocaleString());
+
+              if (mode === 'প্রতিবছরের খরচ') {
+                return `${label} সালের খরচ ${valBn} টাকা`;
+              } 
+              else if (mode === 'প্রতিমাসের খরচ') {
+                return `${label} মাসের খরচ ${valBn} টাকা`;
+              } 
+              else {
+                return `${label} তারিখের খরচ ${valBn} টাকা`;
               }
-              return null;
             }
           }
         },
         datalabels: {
           anchor: 'end',
           align: 'end',
+          rotation: -50,
           formatter: function(value) {
             if (value === 0) return null;
-            return value.toLocaleString();
+            return en2bnNumber(value.toLocaleString());
           },
           color: '#000',
           font: { 

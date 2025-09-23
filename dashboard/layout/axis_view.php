@@ -1,17 +1,14 @@
-
-
-
 <!-- axis_view.php -->
 <div class="card mb-3">
   <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-    <?php 
-      if ($is_all_year) {
-        echo "📅 প্রতিবছরের খরচ";
-      } elseif ($is_all_month) {
-        echo "📅 প্রতিমাসের খরচ";
-      } else {
-        echo "📅 প্রতিদিনের খরচ";
-      }
+    <?php
+    if ($is_all_year) {
+      echo "📅 প্রতিবছরের খরচ";
+    } elseif ($is_all_month) {
+      echo "📅 প্রতিমাসের খরচ";
+    } else {
+      echo "📅 প্রতিদিনের খরচ";
+    }
     ?>
     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#axisFullView">
       ⛶ Full View
@@ -22,16 +19,73 @@
   </div>
 </div>
 
+
+
+<!-- all data filap if day is not entry in database -->
 <div class="card mb-3">
   <div class="card-header bg-light fw-bold">
-    <?php 
-      if ($is_all_year) {
-        echo "📅 প্রতিবছরের তালিকা";
-      } elseif ($is_all_month) {
-        echo "📅 প্রতিমাসের তালিকা";
-      } else {
-        echo "📅 প্রতিদিনের তালিকা";
-      }
+    <?php
+    if ($is_all_year) {
+      echo "📅 প্রতিবছরের তালিকা";
+    } elseif ($is_all_month) {
+      echo "📅 প্রতিমাসের তালিকা";
+    } else {
+      echo "📅 প্রতিদিনের তালিকা";
+    }
+    ?>
+  </div>
+
+  <ul class="list-group list-group-flush">
+    <?php if ($is_all_year): ?>
+      <?php foreach ($axis_labels as $idx => $year_label): ?>
+        <?php if (!empty($axis_data[$idx])): ?>
+          <li class="list-group-item d-flex justify-content-between">
+            <span><?= $year_label ?> সাল</span>
+            <span><?= format_currency_bn($axis_data[$idx]) ?></span>
+          </li>
+        <?php endif; ?>
+      <?php endforeach; ?>
+
+    <?php elseif ($is_all_month): ?>
+      <?php foreach ($months_en as $idx => $m_en): ?>
+        <?php if (!empty($axis_data[$idx])): ?>
+          <li class="list-group-item d-flex justify-content-between">
+            <span><?= $month_map[$m_en] ?></span>
+            <span><?= format_currency_bn($axis_data[$idx]) ?></span>
+          </li>
+        <?php endif; ?>
+      <?php endforeach; ?>
+
+    <?php else: ?>
+      <?php foreach ($axis_data as $d => $val): ?>
+        <?php if ($val > 0): ?>
+          <li class="list-group-item d-flex justify-content-between">
+            <span><?= en2bn_number($d + 1) ?> তারিখ</span>
+            <span><?= format_currency_bn($val) ?></span>
+          </li>
+        <?php endif; ?>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </ul>
+
+  <div class="card-footer bg-white text-center">
+    <span class="fw-bold">💰 মোট খরচ: <?= format_currency_bn(array_sum($axis_data)) ?></span>
+  </div>
+</div>
+
+
+
+<!-- all data filap if day is not entry in database -->
+<!-- <div class="card mb-3">
+  <div class="card-header bg-light fw-bold">
+    <?php
+    if ($is_all_year) {
+      echo "📅 প্রতিবছরের তালিকা";
+    } elseif ($is_all_month) {
+      echo "📅 প্রতিমাসের তালিকা";
+    } else {
+      echo "📅 প্রতিদিনের তালিকা";
+    }
     ?>
   </div>
   <ul class="list-group list-group-flush">
@@ -61,5 +115,4 @@
   <div class="card-footer bg-white text-center">
     <span class="fw-bold">💰 মোট খরচ: <?= format_currency_bn(array_sum($axis_data)) ?></span>
   </div>
-</div>
-
+</div> -->
