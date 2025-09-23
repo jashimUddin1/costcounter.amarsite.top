@@ -99,7 +99,7 @@ $yr_stmt->close();
             ? "সব বছর" 
             : ($is_all_month ? "সকল মাস $year_bn" : "{$month_label} {$year_bn}") ?>
       </h6>
-      <a href="index.php?year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" class="btn btn-outline-secondary btn-sm">
+      <a href="../index.php?year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" class="btn btn-outline-secondary btn-sm">
         ← হোম
       </a>
     </div>
