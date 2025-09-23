@@ -72,7 +72,7 @@
 
     <!-- Dashboard button -->
     <div class="ms-auto">
-      <a href="dashboard.php?year=<?= $current_year ?>&month=<?= $name ?>" class="btn btn-primary">Dashboard</a>
+      <a href="dashboard/index.php?year=<?= $current_year ?>&month=<?= $name ?>" class="btn btn-primary">Dashboard</a>
     </div>
   </div>
 </nav>

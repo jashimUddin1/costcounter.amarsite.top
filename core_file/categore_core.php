@@ -466,7 +466,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($added) {
                         if ($removed)
                             $msg .= " এবং <strong>{$sub_category}</strong> সাব-ক্যাটাগরি";
-                        $msg .= "তে <span style='color:green'>" . implode(', ', $added) . "</span> যোগ হয়েছে";
+                        $msg .= "তে <span style='color:green'>" . implode(', ', $added) . "</span> keywords যোগ হয়েছে";
                     }
 
                     $changes[] = $msg;

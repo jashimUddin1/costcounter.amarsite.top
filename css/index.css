@@ -1,4 +1,19 @@
+.logoDJshort{
+  display: none;
+}
+
 @media (max-width: 576px) {
+  .logoDJFull{
+    display: none;
+  }
+  .logoDJshort{
+    display: inline;
+    font-size: 20px !important;
+  }
+  .link_manage_categories{
+    font-size: 14px !important;
+  }
+
   .entry-header,
   .selectionMenu,
   .monthly-cost-header {
@@ -21,11 +36,17 @@
   
   .entry-header .badge,
   .monthly-cost-header .badge {
-    font-size: 11px !important;
+    font-size: 12px !important;
   }
 
   .dropdown-menu a,
   .dropdown-menu button {
     font-size: 11px !important;
+  }
+  .bottom_fixed_menu {
+    font-size: 16px !important;
+  }
+  .bottom_nav_cut {
+    display: none;
   }
 }

@@ -1,6 +1,7 @@
 <nav class="navbar navbar-expand navbar-dark bg-dark">
   <div class="container">
-    <span class="navbar-brand">Developer Jasim</span>
+    <span class="navbar-brand logoDJFull">Developer Jasim</span>
+    <span class="navbar-brand logoDJshort">DJ</span>
     <ul class="navbar-nav ms-auto">
       <!-- Profile button -->
       <li class="nav-item">
@@ -10,7 +11,7 @@
       </li>
       <li class="nav-item"><a class="nav-link text-white" href="pages/help.php">Help</a></li>
       <?php if (!empty($_SESSION['category_enabled'])): ?>
-        <li class="nav-item"><a class="nav-link text-white bg-success rounded" href="pages/manage_categories.php">Categories</a></li>
+        <li class="nav-item"><a class="nav-link text-white bg-success rounded link_manage_categories" href="pages/manage_categories.php">Categories</a></li>
       <?php endif; ?>
     </ul>
   </div>

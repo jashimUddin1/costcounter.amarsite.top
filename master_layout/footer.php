@@ -1,7 +1,7 @@
 
 
 <footer class="bg-dark text-white text-center p-3 mt-3">
-  &copy; <?= date('Y') ?> MyApp. All Rights Reserved.
+  &copy; <?= date('Y') ?> Developer Jasim. All Rights Reserved.
 </footer>
 
 <!-- Bootstrap JS -->

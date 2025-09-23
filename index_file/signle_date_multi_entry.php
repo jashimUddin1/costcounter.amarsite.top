@@ -15,7 +15,7 @@
       <label class="form-label d-flex align-items-center">
         বিবরণ ও পরিমাণ (কমা দিয়ে দিন)
         <span tabindex="0" class="ms-2 text-primary" data-bs-toggle="tooltip"
-          title="প্রতিটি খরচ কমা দিয়ে আলাদা করুন এবং শেষে পরিমাণ দিন।" style="cursor: pointer;">ℹ️</span>
+          title="প্রতিটি খরচ কমা দিয়ে আলাদা করুন এবং কমার আগে পরিমাণ দিন।" style="cursor: pointer;">ℹ️</span>
       </label>
       <input type="text" name="bulk_description" class="form-control" required
         placeholder="যেমন: খাবার 50, ফল 530, বাজার 25">
