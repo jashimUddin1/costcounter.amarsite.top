@@ -16,52 +16,67 @@ $query_string = $_SERVER['QUERY_STRING'];
 // English → Bangla digit
 function en2bn_number($str)
 {
-    $eng = ['0','1','2','3','4','5','6','7','8','9'];
-    $bn  = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-    return str_replace($eng, $bn, $str);
+  $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return str_replace($eng, $bn, $str);
 }
 
-function bn2en_number($bn_number) {
-    $bn_digits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-    $en_digits = ['0','1','2','3','4','5','6','7','8','9'];
+function bn2en_number($bn_number)
+{
+  $bn_digits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  $en_digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-    // str_replace দিয়ে সব বাংলা সংখ্যা ইংরেজিতে রূপান্তর করা
-    $en_number = str_replace($bn_digits, $en_digits, $bn_number);
+  // str_replace দিয়ে সব বাংলা সংখ্যা ইংরেজিতে রূপান্তর করা
+  $en_number = str_replace($bn_digits, $en_digits, $bn_number);
 
-    return $en_number;
+  return $en_number;
 }
 
 // English → Bangla Month
 function en2bn_month($engMonth)
 {
-    $months_bn = [
-        'January'=>'জানুয়ারি','February'=>'ফেব্রুয়ারি','March'=>'মার্চ','April'=>'এপ্রিল',
-        'May'=>'মে','June'=>'জুন','July'=>'জুলাই','August'=>'আগস্ট',
-        'September'=>'সেপ্টেম্বর','October'=>'অক্টোবর','November'=>'নভেম্বর','December'=>'ডিসেম্বর'
-    ];
-    return $months_bn[$engMonth] ?? $engMonth;
+  $months_bn = [
+    'January' => 'জানুয়ারি',
+    'February' => 'ফেব্রুয়ারি',
+    'March' => 'মার্চ',
+    'April' => 'এপ্রিল',
+    'May' => 'মে',
+    'June' => 'জুন',
+    'July' => 'জুলাই',
+    'August' => 'আগস্ট',
+    'September' => 'সেপ্টেম্বর',
+    'October' => 'অক্টোবর',
+    'November' => 'নভেম্বর',
+    'December' => 'ডিসেম্বর'
+  ];
+  return $months_bn[$engMonth] ?? $engMonth;
 }
 
 // English → Bangla Day
 function en2bn_dayName($engDay)
 {
-    $days_bn = [
-        'Saturday'=>'শনিবার','Sunday'=>'রবিবার','Monday'=>'সোমবার',
-        'Tuesday'=>'মঙ্গলবার','Wednesday'=>'বুধবার','Thursday'=>'বৃহস্পতিবার','Friday'=>'শুক্রবার'
-    ];
-    return $days_bn[$engDay] ?? $engDay;
+  $days_bn = [
+    'Saturday' => 'শনিবার',
+    'Sunday' => 'রবিবার',
+    'Monday' => 'সোমবার',
+    'Tuesday' => 'মঙ্গলবার',
+    'Wednesday' => 'বুধবার',
+    'Thursday' => 'বৃহস্পতিবার',
+    'Friday' => 'শুক্রবার'
+  ];
+  return $days_bn[$engDay] ?? $engDay;
 }
 
 // Full Bangla Date
 function bn_full_date($date_string)
 {
-    $timestamp = strtotime($date_string);
-    $day_num = en2bn_number(date('j', $timestamp));    
-    $month_bn = en2bn_month(date('F', $timestamp)); 
-    $year_bn = en2bn_number(date('Y', $timestamp));       
-    $day_bn = en2bn_dayName(date('l', $timestamp)); 
+  $timestamp = strtotime($date_string);
+  $day_num = en2bn_number(date('j', $timestamp));
+  $month_bn = en2bn_month(date('F', $timestamp));
+  $year_bn = en2bn_number(date('Y', $timestamp));
+  $day_bn = en2bn_dayName(date('l', $timestamp));
 
-    return "{$day_num} {$month_bn} {$year_bn} | {$day_bn}";
+  return "{$day_num} {$month_bn} {$year_bn} | {$day_bn}";
 }
 
 
@@ -81,21 +96,21 @@ if (!isset($_GET['year']) || !isset($_GET['month'])) {
   // সর্বশেষ ডেটা থেকে বছর/মাস বের করা
   $latest_sql = "SELECT YEAR(date) AS y, MONTH(date) AS m FROM cost_data WHERE user_id = ? ORDER BY date DESC LIMIT 1";
   $stmt = $con->prepare($latest_sql);
-  $stmt->bind_param("i",$user_id);
+  $stmt->bind_param("i", $user_id);
   $stmt->execute();
   $latest_res = $stmt->get_result();
   if ($latest_res && $latest_res->num_rows > 0) {
     $latest = $latest_res->fetch_assoc();
-    $current_year  = $latest['y'];
+    $current_year = $latest['y'];
     $current_month = $latest['m'];
   } else {
-    $current_year  = date('Y');
+    $current_year = date('Y');
     $current_month = date('n');
   }
   $stmt->close();
 } else {
   $current_year = intval($_GET['year']);
-  $month_input  = $_GET['month'];
+  $month_input = $_GET['month'];
 
   // month = নাম হলে number এ কনভার্ট
   if (!is_numeric($month_input)) {
@@ -140,7 +155,7 @@ $transResult = $stmtTrans->get_result();
 
 $total_monthly_cost = 0;
 $grouped_data = [];
-$excluded_categories = ['প্রাপ্তি','প্রদান','আয়'];
+$excluded_categories = ['প্রাপ্তি', 'প্রদান', 'আয়'];
 
 while ($row = $transResult->fetch_assoc()) {
   $date = date('d-m-Y', strtotime($row['date']));
@@ -197,26 +212,23 @@ $stmt->close();
     <?php include "includes/session_modal.php"; ?>
   </div>
 
-  <!-- ✅ Data Entry Form Selector -->
-  <?php
-  // Default fallback: single entry form
-  if (empty($_SESSION['multi_entry_enabled'])) {
-    include "index_file/data_entry.php"; // 👉 Single Entry Mode
-  }
-  // Multiple Entry Mode
-  else {
-    $entryTypes = $_SESSION['entry_type_select'] ?? [];
 
-    if (in_array('single_date', $entryTypes)) {
-      include "index_file/signle_date_multi_entry.php"; // 👉 Single Date Multiple Entry
-    } elseif (in_array('multi_date', $entryTypes)) {
-      include "index_file/multi_date_multi_entry.php"; // 👉 Multi Date Multiple Entry
-    } else {
-      // fallback if no valid entry_type selected
-      $_SESSION['warning'] = '⚠️ অনুগ্রহ করে Data Entry Options নির্বাচন করুন।';
-    }
+
+  <?php // ✅ Data Entry Form Selector
+  $entry_mode = $_SESSION['entry_mode'] ?? 'single';
+
+  if ($entry_mode === 'single') {
+    include "index_file/signle_date_multi_entry.php"; // 👉 Single Entry
+  } elseif ($entry_mode === 'manual') {
+    include "index_file/data_entry.php"; // 👉 Manual Entry
+  } elseif ($entry_mode === 'multiple') {
+    include "index_file/multi_date_multi_entry.php"; // 👉 Multi date multi Entry
+  } elseif ($entry_mode === 'multi_entry_one_page') {
+    include "index_file/multi_entry_one_page.php"; // 👉 One Page Entry
   }
   ?>
+
+
 
   <?php if (!empty($_SESSION['enabled_displayed'])): ?>
     <!-- ⚙️ Settings Status Info -->

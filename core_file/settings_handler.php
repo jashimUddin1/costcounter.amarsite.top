@@ -2,49 +2,57 @@
 session_start();
 
 if (isset($_POST['save_setting_btn'])) {
-    // ✅ Edit toggle
+    /* ======================
+       ✏️ Edit Options
+    ====================== */
     $_SESSION['edit_enabled']  = isset($_POST['edit_enabled']);
     $_SESSION['edit_date']     = isset($_POST['edit_date']);
     $_SESSION['edit_balance']  = isset($_POST['edit_balance']);
 
-    // ✅ Delete toggle
+    /* ======================
+       🗑️ Delete Options
+    ====================== */
     $_SESSION['delete_enabled'] = isset($_POST['delete_enabled']);
     $_SESSION['delete_day']     = isset($_POST['delete_day']);
 
-    // ✅ Entry mode: single / multiple
+    /* ======================
+       🧾 Entry Mode
+       (single / manual / multiple / multi_entry_one_page)
+    ====================== */
     $entry_mode = $_POST['entry_mode'] ?? 'single';
-    $_SESSION['multi_entry_enabled'] = ($entry_mode === 'multiple');
+    $_SESSION['entry_mode'] = $entry_mode;
 
-    if ($_SESSION['multi_entry_enabled']) {
-        $_SESSION['entry_type_select'] = $_POST['entry_type_select'] ?? [];
-    } else {
-        unset($_SESSION['entry_type_select']);
-    }
+    // ✅ Mapping:
+    // single → index_file/signle_date_multi_entry.php
+    // manual → index_file/data_entry.php
+    // multiple → index_file/multi_date_multi_entry.php
+    // multi_entry_one_page → index_file/multi_entry_one_page.php
 
-    // ✅ Category toggle
+    /* ======================
+       📂 Category Options
+    ====================== */
     $_SESSION['category_enabled'] = isset($_POST['category_enabled']);
     $_SESSION['category_edit']    = isset($_POST['category_edit']);
     $_SESSION['category_delete']  = isset($_POST['category_delete']);
 
-    // ✅ Display toggle
+    /* ======================
+       ⚙️ Display Options
+    ====================== */
     $_SESSION['enabled_displayed'] = isset($_POST['enabled_displayed']);
 
-    // ✅ Success message
+    /* ======================
+       ✅ Success Message
+    ====================== */
     $_SESSION['status'] = "Settings saved successfully ✅";
 
-    // ✅ Redirect back to index.php (or referer if needed)
+    // Redirect back
     $redirect_url = $_SERVER['HTTP_REFERER'] ?? '../index.php';
     header("Location: $redirect_url");
     exit;
 
 } else {
-    // ❌ Invalid / direct access → back to previous page with JS
-     $_SESSION['danger'] = "Invalid access. unauthorized. will be reported. next time ip will be blocked or punished.";
-
-    echo "<script>
-        alert('Unauthorized access detected 🚫, Invalid access.  will be reported. next time ip will be blocked or punished.');
-        window.history.back();
-    </script>";
+    $_SESSION['danger'] = "🚫 Invalid access detected.";
+    echo "<script>alert('🚫 Unauthorized access!'); window.history.back();</script>";
     exit;
 }
 ?>

@@ -1,3 +1,4 @@
+<!-- index_file/entry_header.php -->
 <div class="d-flex justify-content-between align-items-center mb-3 entry-header">
 
   <!-- Selected Month Badge -->
@@ -6,7 +7,6 @@
       Selected Month: <?= date("F", mktime(0, 0, 0, $current_month, 1)) ?> - <?= $current_year ?>
     </span>
   </h5>
-
 
   <div class="selectedWrapper d-flex">
 
@@ -44,31 +44,26 @@
 
         <div class="form-check">
           <input class="form-check-input" type="radio" name="entry_mode" id="singleEntry" value="single"
-            <?= empty($_SESSION['multi_entry_enabled']) ? 'checked' : '' ?>>
+            <?= ($_SESSION['entry_mode'] ?? 'single') === 'single' ? 'checked' : '' ?>>
           <label class="form-check-label" for="singleEntry">Single</label>
         </div>
 
         <div class="form-check">
-          <input class="form-check-input" type="radio" name="entry_mode" id="multiEntry" value="multiple"
-            <?= !empty($_SESSION['multi_entry_enabled']) ? 'checked' : '' ?>>
-          <label class="form-check-label" for="multiEntry">Multiple</label>
+          <input class="form-check-input" type="radio" name="entry_mode" id="manualEntry" value="manual"
+            <?= ($_SESSION['entry_mode'] ?? '') === 'manual' ? 'checked' : '' ?>>
+          <label class="form-check-label" for="manualEntry">Manual</label>
         </div>
 
-        <!-- ✅ Only for Multiple Mode -->
-        <div id="multiEntryOptions" style="display: <?= !empty($_SESSION['multi_entry_enabled']) ? 'block' : 'none' ?>; margin-left: 1rem;">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="entry_mode" id="multipleEntry" value="multiple"
+            <?= ($_SESSION['entry_mode'] ?? '') === 'multiple' ? 'checked' : '' ?>>
+          <label class="form-check-label" for="multipleEntry">Multiple</label>
+        </div>
 
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="entry_type_select[]" value="single_date"
-              <?= in_array('single_date', $_SESSION['entry_type_select'] ?? []) ? 'checked' : '' ?>>
-            <label class="form-check-label">Single Date Multiple Entry</label>
-          </div>
-
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="entry_type_select[]" value="multi_date"
-              <?= in_array('multi_date', $_SESSION['entry_type_select'] ?? []) ? 'checked' : '' ?>>
-            <label class="form-check-label">Multi Date Multiple Entry</label>
-          </div>
-
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="entry_mode" id="multiEntryOnePage"
+            value="multi_entry_one_page" <?= ($_SESSION['entry_mode'] ?? '') === 'multi_entry_one_page' ? 'checked' : '' ?>>
+          <label class="form-check-label" for="multiEntryOnePage">Multi Entry One Page</label>
         </div>
       </div>
 
@@ -110,19 +105,16 @@
         </div>
       </div>
 
-
       <!-- 📂 Category Options -->
       <div class="mb-4">
         <h6>📂 Category Options</h6>
 
-        <!-- ✅ Enable Category Selection -->
         <div class="form-check">
           <input class="form-check-input" type="checkbox" name="category_enabled" id="categoryEnabled"
             <?= !empty($_SESSION['category_enabled']) ? 'checked' : '' ?>>
           <label class="form-check-label" for="categoryEnabled">Enable Category Selection</label>
         </div>
 
-        <!-- 🔽 Extra options (edit/delete) only visible if enabled -->
         <div id="categoryExtraOptions" style="<?= empty($_SESSION['category_enabled']) ? 'display:none;' : '' ?>">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" name="category_edit" id="categoryEdit"
@@ -148,65 +140,28 @@
       </div>
 
       <!-- Submit Button ✅ -->
-      <button type="submit" name="save_setting_btn" class="btn btn-sm btn-primary"> Save Setting</button>
+      <button type="submit" name="save_setting_btn" class="btn btn-sm btn-primary">Save Setting</button>
     </form>
 
     <a href="pages/update_logs.php" class="btn btn-outline-primary mt-3">🔄 View Update Logs</a>
   </div>
 </div>
 
-<!-- 🔁 JavaScript to toggle multi options & enforce required -->
+<!-- 🔁 JavaScript to toggle category extra options -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    /* ==============================
-       🔹 Category Options Toggle
-    ============================== */
     const categoryEnabled = document.getElementById("categoryEnabled");
     const categoryExtraOptions = document.getElementById("categoryExtraOptions");
 
     function toggleCategoryOptions() {
       if (categoryEnabled && categoryExtraOptions) {
-        if (categoryEnabled.checked) {
-          categoryExtraOptions.style.display = "block";
-        } else {
-          categoryExtraOptions.style.display = "none";
-        }
+        categoryExtraOptions.style.display = categoryEnabled.checked ? "block" : "none";
       }
     }
 
     if (categoryEnabled) {
       toggleCategoryOptions();
       categoryEnabled.addEventListener("change", toggleCategoryOptions);
-    }
-
-    /* ==============================
-       🔹 Entry Mode Toggle
-    ============================== */
-    const singleRadio = document.getElementById("singleEntry");
-    const multiRadio = document.getElementById("multiEntry");
-    const multiOptions = document.getElementById("multiEntryOptions");
-
-    if (singleRadio && multiRadio && multiOptions) {
-      const entryTypeRadios = multiOptions.querySelectorAll('input[name="entry_type_select[]"]');
-
-      function toggleMultiOptions() {
-        const isMulti = multiRadio.checked;
-
-        // Show or hide multi options
-        multiOptions.style.display = isMulti ? "block" : "none";
-
-        // Set or unset required on sub-options
-        entryTypeRadios.forEach(radio => {
-          radio.required = isMulti;
-        });
-      }
-
-      // Initial setup
-      toggleMultiOptions();
-
-      // Event listeners
-      singleRadio.addEventListener("change", toggleMultiOptions);
-      multiRadio.addEventListener("change", toggleMultiOptions);
     }
   });
 </script>

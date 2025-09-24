@@ -1,4 +1,4 @@
-<?php
+<?php // index_file/final_body.php
 // --- Balance বের করা ---
 $query = "SELECT id, amount FROM balancesheet WHERE user_id = '$user_id' AND date LIKE '$current_year-$current_month-%' AND balance_type = 'balance_bd'
     ORDER BY date DESC
@@ -40,21 +40,28 @@ if ($txn_result && mysqli_num_rows($txn_result) > 0) {
 
         if ($txn['category'] === 'আয়') {
             $total_monthly_income += $txn['amount'];
-        } 
-
-        if ($txn['category'] === 'আয়' || $txn['category'] === 'প্রাপ্তি') {
             $current_balance += $txn['amount'];
-        } else {
+        } 
+        elseif ($txn['category'] === 'প্রাপ্তি') {
+            $current_balance += $txn['amount'];
+        } 
+        elseif ($txn['category'] === 'ব্যয় হৃাস') {
+            // 🟢 new logic
+            $current_balance += $txn['amount'];     
+            $total_monthly_cost -= $txn['amount']; 
+        }
+        else {
             $current_balance -= $txn['amount'];
-             if (!in_array($txn['category'], $excluded_categories)) {
+            if (!in_array($txn['category'], $excluded_categories)) {
                 $total_monthly_cost += $txn['amount'];
-            }            
+            }
         }
 
         $txn['running_balance'] = $current_balance;
         $grouped_data[$date][] = $txn;
     }
 }
+
 ?>
 
 

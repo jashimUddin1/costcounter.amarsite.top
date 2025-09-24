@@ -1,5 +1,5 @@
 
-<?php //merged_multi_date_single_entry.php
+<?php //multi_date_multi_entry.php
 
   // Get user categories for auto detect + dropdown
   $category_map = [];
