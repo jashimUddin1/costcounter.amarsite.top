@@ -1,0 +1,6 @@
+==== NEW RUN 2025-09-29 02:16:11 ====
+RAW: [05/05/2025: ada 20, lobon 10]
+DATE DETECTED: 2025-05-05
+INLINE AFTER DATE: [ada 20, lobon 10]
+ENTRY: [2025-05-05] ada = 20
+ENTRY: [2025-05-05] lobon = 10

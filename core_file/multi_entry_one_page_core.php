@@ -1,9 +1,7 @@
 <?php
-// core_file/multi_entry_one_page_core.php
 session_start();
 include("../db/dbcon.php");
 
-// ইউজার লগইন চেক
 if (!isset($_SESSION['authenticated'])) {
     header("Location: ../login/index.php");
     exit();
@@ -11,173 +9,259 @@ if (!isset($_SESSION['authenticated'])) {
 
 $user_id = $_SESSION['auth_user']['id'] ?? null;
 if (!$user_id) {
-    $_SESSION['danger'] = "❌ User ID missing!";
+    $_SESSION['danger'] = "❌ Unauthorized access!";
     header("Location: ../index.php");
     exit();
 }
 
-// Redirect query
-$redirect_query = $_POST['redirect_query'] ?? '';
-
-// Input
-$bulk_description = trim($_POST['bulk_description'] ?? '');
-if ($bulk_description === '') {
-    $_SESSION['warning'] = "❌ ইনপুট ফাঁকা রাখা যাবে না!";
-    header("Location: ../index.php?$redirect_query");
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: ../index.php");
     exit();
 }
 
-// 🔢 সংখ্যা কনভার্সন
-function bn2en($str) {
+$redirect_query = $_POST['redirect_query'] ?? '';
+$bulk_text      = $_POST['bulk_description'] ?? '';
+$created_at     = date('Y-m-d H:i:s');
+
+// =========================
+// Helper Functions
+// =========================
+function bn2en_number($s) {
     $bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
     $en = ['0','1','2','3','4','5','6','7','8','9'];
-    return str_replace($bn, $en, $str);
+    return str_replace($bn,$en,$s);
 }
 
- function en2bn_number($str)
-    {
-        $eng = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-        $bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-        return str_replace($eng, $bn, $str);
-    }
+// বাংলা/ইংরেজি মাস mapping
+$monthMap = [
+    // English
+    'January'=>'January','February'=>'February','March'=>'March','April'=>'April',
+    'May'=>'May','June'=>'June','July'=>'July','August'=>'August',
+    'September'=>'September','October'=>'October','November'=>'November','December'=>'December',
 
-// detectCategory dummy (real system এ আপনার DB থেকে আনতে পারেন)
-function detectCategory($desc) {
-    if (mb_stripos($desc, 'খাবার') !== false) return 'খাবার';
-    if (mb_stripos($desc, 'বাজার') !== false) return 'বাজার';
-    if (mb_stripos($desc, 'ফল') !== false) return 'ফল';
-    return 'অন্যান্য';
+    // Bangla variations
+    'জানুয়ারি'=>'January','জানুয়ারী'=>'January','জানুয়ারি'=>'January',
+    'ফেব্রুয়ারি'=>'February','ফেব্রুয়ারি'=>'February',
+    'মার্চ'=>'March','এপ্রিল'=>'April','মে'=>'May','জুন'=>'June','জুলাই'=>'July',
+    'আগস্ট'=>'August','সেপ্টেম্বর'=>'September','অক্টোবর'=>'October',
+    'নভেম্বর'=>'November','ডিসেম্বর'=>'December'
+];
+
+// দিননাম regex (বাংলা + ইংরেজি)
+$dayRegex = '(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|রবিবার|সোমবার|মঙ্গলবার|বুধবার|বৃহস্পতিবার|শুক্রবার|শনিবার)';
+
+// =========================
+// Category Map Load
+// =========================
+$category_map = [];
+$stmt = $con->prepare("SELECT category_name, sub_category, category_keywords 
+                       FROM categories 
+                       WHERE user_id = ?");
+$stmt->bind_param("i",$user_id);
+$stmt->execute();
+$res = $stmt->get_result();
+while($row = $res->fetch_assoc()){
+    $cat_name = trim($row['category_name']);
+    $sub_cat  = trim($row['sub_category']);
+    if ($sub_cat==='' || strtolower($sub_cat)==='none') $sub_cat='none';
+
+    $cats = trim($row['category_keywords']);
+    $keywords = $cats!==''? array_map('trim',explode(',',$cats)):[];
+
+    if (!isset($category_map[$cat_name])) $category_map[$cat_name] = [];
+    $category_map[$cat_name][$sub_cat] = $keywords;
 }
+$stmt->close();
 
-// ======================
-// Parser Function
-// ======================
-function parseEntries($text) {
-    global $bnMonths, $enMonths;
-    $bnMonths = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-    $enMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function detectCategory($description,$category_map){
+    $desc_lower = mb_strtolower(trim($description));
+    $desc_lower = preg_replace('/\s+/u',' ',$desc_lower);
 
-    $lines = preg_split("/\r\n|\n|\r/", $text);
-    $results = [];
-    $currentDate = null;
+    $best = ['category'=>'অন্যান্য','keyword'=>''];
+    $best_length=0;
 
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line === '') continue;
+    foreach($category_map as $cat=>$subcats){
+        foreach($subcats as $sub=>$keywords){
+            foreach($keywords as $kw){
+                $kw = mb_strtolower(trim($kw));
+                if ($kw==='') continue;
+                $kw = preg_replace('/\s+/u',' ',$kw);
 
-        // 1) YYYY-MM-DD : desc
-        if (preg_match('/^(\d{4}-\d{2}-\d{2})\s*:?\s*(.+)?$/', $line, $m)) {
-            $currentDate = $m[1];
-            if (!empty($m[2])) {
-                $entries = preg_split("/,|\n/", $m[2]);
-                foreach ($entries as $e) addEntry($e, $currentDate, $results);
-            }
-            continue;
-        }
-
-        // 2) dd/mm/yyyy বা d-m-Y
-        if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $line, $m)) {
-            $d = str_pad($m[1], 2, "0", STR_PAD_LEFT);
-            $mth = str_pad($m[2], 2, "0", STR_PAD_LEFT);
-            $y = $m[3];
-            $currentDate = "$y-$mth-$d";
-            continue;
-        }
-
-        // 3) English Month: 15 July 2025
-        if (preg_match('/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/', $line, $m)) {
-            $d = str_pad($m[1], 2, "0", STR_PAD_LEFT);
-            $y = $m[3];
-            $mth = array_search(ucfirst(strtolower($m[2])), $enMonths);
-            if ($mth === false) {
-                foreach ($enMonths as $idx => $mon) {
-                    if (stripos($mon, $m[2]) === 0) $mth = $idx;
+                if (mb_strpos($desc_lower,$kw)!==false){
+                    if (mb_strlen($kw)>$best_length){
+                        $best['category']=$cat;
+                        $best['keyword']=$kw;
+                        $best_length=mb_strlen($kw);
+                    }
                 }
             }
-            $currentDate = "$y-".str_pad($mth+1,2,"0",STR_PAD_LEFT)."-$d";
-            continue;
-        }
-
-        // 4) বাংলা তারিখ: ১ জুলাই ২০২৫
-        $lineEn = bn2en($line);
-        if (preg_match('/^(\d{1,2})\s*([^\s\d]+)\s*(\d{4})/', $lineEn, $m)) {
-            $d = str_pad($m[1], 2, "0", STR_PAD_LEFT);
-            $y = $m[3];
-            $mth = 0;
-            foreach ($bnMonths as $idx => $mon) {
-                if (mb_strpos($mon, $m[2]) !== false) $mth = $idx+1;
-            }
-            $currentDate = "$y-".str_pad($mth,2,"0",STR_PAD_LEFT)."-$d";
-            continue;
-        }
-
-        // Entry line
-        if ($currentDate) {
-            addEntry($line, $currentDate, $results);
         }
     }
-
-    return $results;
+    return $best;
 }
 
-// 🔧 Process single entry line
-function addEntry($entry, $date, &$results) {
-    $entry = bn2en($entry);
-    $entry = preg_replace('/^\d+\.\s*/u', '', $entry); // serial বাদ
-    $entry = str_ireplace(['টাকা','৳','tk'], '', $entry);
+// =========================
+// Entry processors
+// =========================
+function process_single_entry($entry, $date, &$entries_by_date, $debugFile){
+    // বাংলা→ইংরেজি সংখ্যা, সিরিয়াল/টাকা বাদ, desc+amount split
+    $line = bn2en_number(trim($entry));
+    if ($line==='') return;
 
-    if (preg_match('/(.+?)\s*([\d\+]+)/u', $entry, $m)) {
-        $desc = trim($m[1]);
-        $amt_str = $m[2];
-        $parts = explode('+', $amt_str);
+    // সিরিয়াল নম্বর বাদ (যেমন: "২." / "2:" / "2-" ইত্যাদি)
+    $line = preg_replace('/^\d+[\.\-:]?\s*/u','',$line);
+    // টাকা শব্দ/চিহ্ন বাদ
+    $line = str_ireplace([' টাকা','টাকা',' tk','tk','৳'],'',$line);
+
+    if (preg_match('/^(.+?)\s*([\d\+\.\s]+)$/u',$line,$m)){
+        $desc   = trim($m[1]);
+        $amtStr = trim($m[2]);
+
+        // "40+50" যোগফল
+        $parts = array_filter(array_map('trim', explode('+',$amtStr)), fn($v)=>$v!=='');
         $amt = 0;
-        foreach ($parts as $p) $amt += floatval(trim($p));
-        $results[] = ['date'=>$date,'desc'=>$desc,'amt'=>$amt];
+        foreach($parts as $p) $amt += floatval($p);
+
+        $entries_by_date[$date][] = [
+            'description'=>$desc,
+            'amount'=>$amt
+        ];
+        file_put_contents($debugFile, "ENTRY: [$date] $desc = $amt\n", FILE_APPEND);
+    } else {
+        file_put_contents($debugFile, "NO MATCH INLINE: [$entry]\n", FILE_APPEND);
     }
 }
 
-// ======================
+function process_inline_entries($text, $date, &$entries_by_date, $debugFile, $dayRegex){
+    if (!$date) return;
+    if ($text===null) return;
+
+    // শুরুর কোলন/ড্যাশ/দিননাম বাদ
+    $clean = preg_replace('/^\s*[:,\-–—]\s*/u','', $text); // শুরুতে থাকা : , - মুছি
+    $clean = preg_replace('/^\s*'.$dayRegex.'\s*[:,\-–—]?\s*/iu','', $clean); // শুরুতে day থাকলে মুছি
+
+    $clean = trim($clean);
+    if ($clean==='') return;
+
+    file_put_contents($debugFile, "INLINE AFTER DATE: [$clean]\n", FILE_APPEND);
+
+    // কমা/আরবি কমা/পাইপ দিয়ে ভাগ
+    $chunks = preg_split('/[,\|،]+/u', $clean);
+    foreach($chunks as $chunk){
+        $chunk = trim($chunk);
+        if ($chunk==='') continue;
+        process_single_entry($chunk, $date, $entries_by_date, $debugFile);
+    }
+}
+
+// =========================
+$lines = preg_split('/\r\n|\r|\n/',$bulk_text);
+$current_date='';
+$entries_by_date=[];
+
+$debugFile = __DIR__ . "/../debug_log.txt";
+file_put_contents($debugFile, "==== NEW RUN ".date("Y-m-d H:i:s")." ====\n");
+
+foreach($lines as $line){
+    $line = trim($line);
+    if ($line==='') continue;
+
+    file_put_contents($debugFile, "RAW: [$line]\n", FILE_APPEND);
+
+    // ---- 1) YYYY-MM-DD (inline entries allowed) ----
+    if (preg_match('/^(\d{4}-\d{2}-\d{2})\s*[:,\-–—]?\s*(.*)$/u',$line,$m)){
+        $current_date = $m[1];
+        file_put_contents($debugFile, "DATE DETECTED: $current_date\n", FILE_APPEND);
+        $rest = trim($m[2] ?? '');
+        if ($rest!==''){
+            process_inline_entries($rest, $current_date, $entries_by_date, $debugFile, $dayRegex);
+        }
+        continue;
+    }
+
+    // ---- 2) dd/mm/yyyy বা dd-mm-yyyy + optional day + inline entries ----
+    if (preg_match('/^(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})\s*(?:'.$dayRegex.')?\s*[:,\-–—]?\s*(.*)$/iu',$line,$m)){
+        $current_date = date('Y-m-d', strtotime(bn2en_number($m[1])));
+        file_put_contents($debugFile, "DATE DETECTED: $current_date\n", FILE_APPEND);
+        $rest = trim($m[2] ?? '');
+        if ($rest!==''){
+            process_inline_entries($rest, $current_date, $entries_by_date, $debugFile, $dayRegex);
+        }
+        continue;
+    }
+
+    // ---- 3) d Month yyyy (Bangla/English) + optional day + inline entries ----
+    if (preg_match('/^(\d{1,2})\s*([A-Za-z]+|\p{Bengali}+)\s+(\d{4})(?:\s+(?:'.$dayRegex.'))?\s*[:,\-–—]?\s*(.*)$/u',$line,$m)){
+        $d      = bn2en_number($m[1]);
+        $mn_raw = trim($m[2]);
+        $y      = bn2en_number($m[3]);
+        $rest   = trim($m[4] ?? '');
+
+        global $monthMap;
+        $mn = $monthMap[$mn_raw] ?? $mn_raw;
+
+        $current_date = date('Y-m-d', strtotime("$d $mn $y"));
+        file_put_contents($debugFile, "DATE DETECTED: $current_date\n", FILE_APPEND);
+
+        if ($rest!==''){
+            process_inline_entries($rest, $current_date, $entries_by_date, $debugFile, $dayRegex);
+        }
+        continue;
+    }
+
+    // ---- 4) যদি আজকের লাইনটা entry হয় (তারিখ আগের লাইনে ধরা আছে) ----
+    if ($current_date!==''){
+        process_single_entry($line, $current_date, $entries_by_date, $debugFile);
+    }
+}
+
+// =========================
 // Insert into DB
-// ======================
-$entries = parseEntries($bulk_description);
-$inserted = 0;
-$created_at = date('Y-m-d H:i:s');
+// =========================
+$inserted=0;
+foreach($entries_by_date as $date=>$items){
+    $year=date('Y',strtotime($date));
+    $month=date('F',strtotime($date));
+    $day_name=date('l',strtotime($date));
 
-foreach ($entries as $row) {
-    $date = $row['date'] ?? date('Y-m-d'); // fallback আজকের তারিখ
-    $year = date('Y', strtotime($date));
-    $month = date('F', strtotime($date));
-    $day_name = date('l', strtotime($date));
-
-    // ওই তারিখে সর্বশেষ serial খুঁজে বের করো
-    $serial_query = $con->prepare("SELECT MAX(serial) as max_serial FROM cost_data WHERE user_id=? AND date=?");
-    $serial_query->bind_param("is", $user_id, $date);
+    // last serial
+    $serial_query=$con->prepare("SELECT MAX(serial) as max_serial FROM cost_data WHERE user_id=? AND date=?");
+    $serial_query->bind_param("is",$user_id,$date);
     $serial_query->execute();
-    $max_s = $serial_query->get_result()->fetch_assoc()['max_serial'] ?? 0;
+    $max_s=$serial_query->get_result()->fetch_assoc()['max_serial'] ?? 0;
     $serial_query->close();
-    $serial = $max_s + 1;
+    $serial=$max_s+1;
 
-    $category = detectCategory($row['desc']);
+    foreach($items as $it){
+        $desc=$it['description'];
+        $amt=$it['amount'];
 
-    $stmt = $con->prepare("INSERT INTO cost_data 
-        (user_id,year,month,date,day_name,description,amount,match_keyword,category,serial,created_at) 
-        VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-    $mk = ''; // match_keyword আপাতত খালি
-    $stmt->bind_param("iissssissis",
-        $user_id,$year,$month,$date,$day_name,
-        $row['desc'],$row['amt'],$mk,$category,$serial,$created_at
-    );
-    if ($stmt->execute()) $inserted++;
-    $serial++;
+        $result=detectCategory($desc,$category_map);
+        $cat=$result['category'];
+        $match_kw=$result['keyword'];
+
+        $stmt=$con->prepare("INSERT INTO cost_data 
+            (user_id,year,month,date,day_name,description,amount,match_keyword,category,serial,created_at) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("iissssissis",
+            $user_id,$year,$month,$date,$day_name,
+            $desc,$amt,$match_kw,$cat,$serial,$created_at
+        );
+        if($stmt->execute()) $inserted++;
+        $serial++;
+    }
 }
 
-// ======================
-// Message & Redirect
-// ======================
-if ($inserted>0) {
-    $_SESSION['success'] = "✅ " . en2bn_number($inserted) . "টি এন্ট্রি যোগ হয়েছে!";
-} else {
-    $_SESSION['danger'] = "❌ কোনো এন্ট্রি যোগ হয়নি! ফরম্যাট চেক করুন!";
+// =========================
+// Session Message + Redirect
+// =========================
+$debug_link = "<a href='view_debug.php' target='_blank'>📜 Debug Log দেখুন</a>";
+
+if($inserted>0){
+    $_SESSION['success']="✅ {$inserted} টি এন্ট্রি যোগ হয়েছে! $debug_link";
+}else{
+    $_SESSION['danger']="❌ কোনো এন্ট্রি যোগ হয়নি! $debug_link";
 }
+
 header("Location: ../index.php?$redirect_query");
-exit();
+exit;
