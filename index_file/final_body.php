@@ -194,7 +194,8 @@ if ($txn_result && mysqli_num_rows($txn_result) > 0) {
         </div>
 
         <div class="text-end">
-             <strong>অবশিষ্ট: <?= en2bn_number($txn['running_balance']) ?> টাকা</strong>
+             <strong>অবশিষ্ট: <?= en2bn_number($txn['running_balance'] ?? $current_balance ?? 0) ?> টাকা</strong>
+
         </div>
     </div>
 

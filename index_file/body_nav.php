@@ -1,3 +1,5 @@
+<!-- index_file/body_nav.php -->
+
 <style>
   @media (max-width: 576px) {
     .monthSelect {
@@ -46,8 +48,9 @@
       <!-- বর্তমান মাস -->
       <?php if (!empty($months)): ?>
         <li class="nav-item dropdown">
-          <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            <?= en2bn_month($months[$current_month]) ?>
+          <button class="btn btn-primary dropdown-toggle"  type="button" data-bs-toggle="dropdown">
+            <?= isset($months[$current_month]) ? en2bn_month($months[$current_month]) : '<span data-bs-toggle="tooltip" title="নির্বাচন করুন">মাস</span>' ?>
+
           </button>
           <ul class="dropdown-menu">
             <?php foreach ($months as $num => $name): ?>
@@ -76,3 +79,5 @@
     </div>
   </div>
 </nav>
+
+
