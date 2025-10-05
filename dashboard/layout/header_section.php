@@ -1,7 +1,8 @@
+<?php
+$dashboard = $_GET['dashboard'] ?? '1';
 
-
-<?php // dashboard/layout/header_section.php
-if (!$is_all_year) {
+// মাস বের করব শুধু তখন যখন All Year না আর dashboard = 3 না
+if (!$is_all_year && $dashboard != '3') {
   $month_sql = "SELECT DISTINCT month 
                 FROM cost_data 
                 WHERE user_id = ? AND year = ?
@@ -30,17 +31,23 @@ if (!$is_all_year) {
   }
   $month_stmt->close();
 } else {
-  $available_months = []; // সব বছর হলে মাস দেখাবো না
+  $available_months = []; // dashboard=3 বা All Year হলে মাস দেখাবো না
 }
 
-// Year dropdown এর জন্য min year বের করি
-$yr_sql = "SELECT MIN(year) as miny FROM cost_data WHERE user_id = ?";
+// ✅ এখন Year dropdown এর জন্য শুধু database এ থাকা year নেব
+$yr_sql = "SELECT DISTINCT year 
+           FROM cost_data 
+           WHERE user_id = ? 
+           ORDER BY year ASC";
 $yr_stmt = $con->prepare($yr_sql);
 $yr_stmt->bind_param("i", $user_id);
 $yr_stmt->execute();
 $yr_res = $yr_stmt->get_result();
-$min_year_row = $yr_res->fetch_assoc();
-$min_year = (int) ($min_year_row['miny'] ?? 2023);
+
+$available_years = [];
+while ($row = $yr_res->fetch_assoc()) {
+    $available_years[] = (int)$row['year'];
+}
 $yr_stmt->close();
 ?>
 
@@ -49,10 +56,15 @@ $yr_stmt->close();
   <div class="d-none d-lg-flex justify-content-between align-items-center">
     <div>
       <h5 class="mb-0">
-        
-        <?= $is_all_year
-          ? "সব বছর"
-          : ($is_all_month ? "সকল মাস $year_bn" : "{$month_label} {$year_bn}") ?>
+        <?php
+        if ($is_all_year) {
+          echo "সব বছর";
+        } elseif ($is_all_month) {
+          echo "সকল মাস $year_bn";
+        } else {
+          echo "{$month_label} {$year_bn}";
+        }
+        ?>
       </h5>
     </div>
 
@@ -61,15 +73,15 @@ $yr_stmt->close();
       <!-- Year -->
       <select name="year" class="form-select" style="width:120px" onchange="this.form.submit()">
         <option value="All" <?= $is_all_year ? 'selected' : '' ?>>সব বছর</option>
-        <?php for ($y = $min_year; $y <= (int) date('Y'); $y++): ?>
+        <?php foreach ($available_years as $y): ?>
           <option value="<?= $y ?>" <?= (!$is_all_year && $y == $year) ? 'selected' : '' ?>>
             <?= en2bn_number($y) ?>
           </option>
-        <?php endfor; ?>
+        <?php endforeach; ?>
       </select>
 
-      <!-- Month (শুধু তখন দেখাবে যখন year != All) -->
-      <?php if (!$is_all_year): ?>
+      <!-- Month (Dashboard One/Two তে থাকবে, কিন্তু Three তে থাকবে না) -->
+      <?php if (!$is_all_year && $dashboard != '3'): ?>
         <select name="month" class="form-select" style="width:140px">
           <option value="All" <?= $is_all_month ? 'selected' : '' ?>>সব মাস</option>
           <?php foreach ($available_months as $m_en): ?>
@@ -80,9 +92,9 @@ $yr_stmt->close();
         </select>
       <?php endif; ?>
 
+      <input type="hidden" name="dashboard" value="<?= $dashboard ?>">
       <button class="btn btn-primary" type="submit">দেখুন</button>
     </form>
-
 
     <div>
       <!-- Settings button -->
@@ -96,9 +108,15 @@ $yr_stmt->close();
   <div class="d-lg-none">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h6 class="mb-0">
-        <?= $is_all_year
-          ? "সব বছর"
-          : ($is_all_month ? "সকল মাস $year_bn" : "{$month_label} {$year_bn}") ?>
+        <?php
+        if ($is_all_year) {
+          echo "সব বছর";
+        } elseif ($is_all_month) {
+          echo "সকল মাস $year_bn";
+        } else {
+          echo "{$month_label} {$year_bn}";
+        }
+        ?>
       </h6>
       <!-- Settings button -->
       <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#settingsMenu">
@@ -111,15 +129,15 @@ $yr_stmt->close();
       <!-- Year -->
       <select name="year" class="form-select" onchange="this.form.submit()">
         <option value="All" <?= $is_all_year ? 'selected' : '' ?>>সব বছর</option>
-        <?php for ($y = $min_year; $y <= (int) date('Y'); $y++): ?>
+        <?php foreach ($available_years as $y): ?>
           <option value="<?= $y ?>" <?= (!$is_all_year && $y == $year) ? 'selected' : '' ?>>
             <?= en2bn_number($y) ?>
           </option>
-        <?php endfor; ?>
+        <?php endforeach; ?>
       </select>
 
-      <!-- Month (শুধু তখন দেখাবে যখন year != All) -->
-      <?php if (!$is_all_year): ?>
+      <!-- Month (Dashboard One/Two তে থাকবে, কিন্তু Three তে থাকবে না) -->
+      <?php if (!$is_all_year && $dashboard != '3'): ?>
         <select name="month" class="form-select">
           <option value="All" <?= $is_all_month ? 'selected' : '' ?>>সব মাস</option>
           <?php foreach ($available_months as $m_en): ?>
@@ -130,6 +148,7 @@ $yr_stmt->close();
         </select>
       <?php endif; ?>
 
+      <input type="hidden" name="dashboard" value="<?= $dashboard ?>">
       <button class="btn btn-primary" type="submit">দেখুন</button>
     </form>
   </div>
@@ -144,15 +163,15 @@ $yr_stmt->close();
   <div class="offcanvas-body">
     <div class="list-group">
       <a href="index.php?dashboard=1&year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" 
-         class="list-group-item list-group-item-action <?= (!isset($_GET['dashboard']) || $_GET['dashboard']=='1') ? 'active' : '' ?>">
+         class="list-group-item list-group-item-action <?= ($dashboard=='1') ? 'active' : '' ?>">
          Dashboard One
       </a>
       <a href="index.php?dashboard=2&year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" 
-         class="list-group-item list-group-item-action <?= (isset($_GET['dashboard']) && $_GET['dashboard']=='2') ? 'active' : '' ?>">
+         class="list-group-item list-group-item-action <?= ($dashboard=='2') ? 'active' : '' ?>">
          Dashboard Two
       </a>
-      <a href="index.php?dashboard=3&year=<?= $year ?>&month=<?= htmlspecialchars($month) ?>" 
-         class="list-group-item list-group-item-action <?= (isset($_GET['dashboard']) && $_GET['dashboard']=='3') ? 'active' : '' ?>">
+      <a href="index.php?dashboard=3&year=<?= $year ?>" 
+         class="list-group-item list-group-item-action <?= ($dashboard=='3') ? 'active' : '' ?>">
          Dashboard Three
       </a>
     </div>

@@ -33,11 +33,17 @@ require "queries.php";
 <div class="container">
   <?php include "layout/header_section.php"; ?>
   <div class="session_section mb-3"><?php include "../includes/session_modal.php"; ?></div>
-  <div class="row g-4">
-    <div class="col-lg-6"><?php include "layout/axis_view.php"; ?></div>
-    <div class="col-lg-6"><?php include "layout/category_view.php"; ?></div>
-  </div>
+
+  <?php if (($_GET['dashboard'] ?? '1') == '3'): ?>
+    <?php include "layout/dashboard_three.php"; ?>
+  <?php else: ?>
+    <div class="row g-4">
+      <div class="col-lg-6"><?php include "layout/axis_view.php"; ?></div>
+      <div class="col-lg-6"><?php include "layout/category_view.php"; ?></div>
+    </div>
+  <?php endif; ?>
 </div>
+
 
 <?php include "layout/modals.php"; ?>
 

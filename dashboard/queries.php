@@ -167,7 +167,7 @@ if ($is_all_year) {
 } else {
   // প্রতিদিন
   $axis_raw = [];
-$sql2 = "SELECT DAY(date) as day, category, SUM(amount) as total
+  $sql2 = "SELECT DAY(date) as day, category, SUM(amount) as total
          FROM cost_data
          WHERE user_id = ? AND year = ? AND month = ?
            AND category NOT IN ($placeholders)
@@ -215,3 +215,76 @@ $sql2 = "SELECT DAY(date) as day, category, SUM(amount) as total
 }
 
 arsort($category_data, SORT_NUMERIC);
+
+
+
+
+// =================== Dashboard Three (Yearly Table View) ===================
+if (isset($_GET['dashboard']) && $_GET['dashboard'] == '3') {
+    $dashboard_three_data = [];
+    $dashboard_three_categories = [];
+    $dashboard_three_totals = [];
+    $dashboard_three_breakdown = []; // ✅ tooltip details রাখার জন্য
+
+    // এখানে JOIN টা এমনভাবে করা হয়েছে যেন duplicate না আসে
+    $sql3 = "SELECT 
+                c.month, 
+                DAY(c.date) AS day, 
+                c.category, 
+                c.amount,
+                COALESCE(cat.serial_no, 9999) AS serial_no
+             FROM cost_data c
+             LEFT JOIN (
+                SELECT DISTINCT category_name, serial_no 
+                FROM categories
+             ) cat ON c.category = cat.category_name
+             WHERE c.user_id = ? 
+               AND c.year = ?
+               AND c.category NOT IN ('প্রাপ্তি', 'প্রদান')
+             ORDER BY FIELD(c.month,
+                'January','February','March','April','May','June',
+                'July','August','September','October','November','December'),
+                cat.serial_no ASC, c.date ASC";
+
+    $stmt3 = $con->prepare($sql3);
+    $stmt3->bind_param("ii", $user_id, $year);
+    $stmt3->execute();
+    $res3 = $stmt3->get_result();
+
+    while ($row = $res3->fetch_assoc()) {
+        $month = $row['month'];
+        $day   = (int)$row['day'];
+        $cat   = $row['category'];
+        $val   = (float)$row['amount'];
+        $serial = (int)$row['serial_no'];
+
+        // 🟢 ব্যয় হৃাস হলে minus
+        if ($cat === 'ব্যয় হৃাস') {
+            $val = -$val;
+        }
+
+        // 🟢 tooltip breakdown রাখো
+        $dashboard_three_breakdown[$month][$day][$cat][] = $val;
+
+        // 🟢 main summarized data
+        if (!isset($dashboard_three_data[$month][$day][$cat])) {
+            $dashboard_three_data[$month][$day][$cat] = 0;
+        }
+        $dashboard_three_data[$month][$day][$cat] += $val;
+
+        // 🟢 category list with serial_no
+        $dashboard_three_categories[$cat] = $serial;
+
+        // 🟢 মাসিক মোট
+        if (!isset($dashboard_three_totals[$month])) {
+            $dashboard_three_totals[$month] = 0;
+        }
+        $dashboard_three_totals[$month] += $val;
+    }
+    $stmt3->close();
+
+    // ✅ serial_no অনুযায়ী sort
+    asort($dashboard_three_categories, SORT_NUMERIC);
+    $dashboard_three_categories = array_keys($dashboard_three_categories);
+}
+
