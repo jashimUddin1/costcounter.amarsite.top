@@ -1,5 +1,5 @@
 <!-- #region -->
-<?php //pure PHP code
+<?php //pure PHP code and oi chor tui keno ascho ai page a ??? 
 session_start();
 include("db/dbcon.php");
 
