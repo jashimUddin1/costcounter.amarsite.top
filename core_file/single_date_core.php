@@ -13,6 +13,7 @@ $user_id = $_SESSION['auth_user']['id'] ?? null;
 // ফর্ম সাবমিট চেক
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['date'] ?? '';
+    $to_date = $_POST['to_date'] ?? null;
     $bulk_description = $_POST['bulk_description'] ?? '';
     $redirect_query = $_POST['redirect_query'] ?? '';
     $created_at = date('Y-m-d H:i:s');
@@ -142,13 +143,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $category = $result['category'];
             $match_keyword = $result['keyword'];
 
-            $stmt = $con->prepare("INSERT INTO cost_data (user_id, year, month, date, day_name, description, amount, match_keyword, category, serial, created_at)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $con->prepare("INSERT INTO cost_data (user_id, year, month, date, to_date, day_name, description, amount, match_keyword, category, serial, created_at)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param(
-                "iissssissis",
+                "iisssssissis",
                 $user_id,
                 $year,
                 $month,
                 $date,
+                $to_date,
                 $day_name,
                 $description,
                 $total_amount,

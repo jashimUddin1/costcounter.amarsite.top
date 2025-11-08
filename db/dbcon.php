@@ -2,6 +2,7 @@
 // $host = "127.0.0.1";
 // $dbUser = "root";
 // $dbPwd = "";
+// $dbName  = "amarsite_cost_copy";
 // $dbName  = "cost_counter_salary";
 
 $host =  "localhost";
